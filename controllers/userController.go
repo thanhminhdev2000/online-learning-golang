@@ -5,9 +5,13 @@ import (
 	"net/http"
 	"online-learning-golang/models"
 	"online-learning-golang/utils"
+	"os"
 	"regexp"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -81,10 +85,10 @@ func SignUp(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		query = "INSERT INTO users (email, username, fullName, password) VALUES (?, ?, ?, ?, ?)"
+		query = "INSERT INTO users (email, username, fullName, password) VALUES (?, ?, ?, ?)"
 		_, err = db.Exec(query, newUser.Email, newUser.Username, newUser.FullName, hashedPassword)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user", "err": err})
 			return
 		}
 
@@ -162,12 +166,51 @@ func Login(db *sql.DB) gin.HandlerFunc {
 
 func RefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var jwtKey = []byte(os.Getenv("JWT_KEY"))
+		refreshToken, err := c.Cookie("refreshToken")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "No refresh token found in cookies"})
+			return
+		}
 
+		token, err := jwt.ParseWithClaims(refreshToken, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+			return
+		}
+
+		claims, ok := token.Claims.(*jwt.RegisteredClaims)
+		if !ok || claims.ExpiresAt.Time.Before(time.Now()) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Expired or invalid refresh token"})
+			return
+		}
+
+		userID, err := strconv.Atoi(claims.Subject)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid userID"})
+			return
+		}
+
+		accessToken, err := utils.CreateAccessToken(userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate access token"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"accessToken": accessToken,
+		})
 	}
 }
 
 func Logout() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
+		c.SetCookie("refreshToken", "", -1, "/", "localhost", false, true)
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Logout successful",
+		})
 	}
 }
