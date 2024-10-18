@@ -8,18 +8,18 @@ type SignUp struct {
 	Password  string `json:"password"`
 }
 
-type Login struct {
+type LoginRequest struct {
 	Identifier string `json:"identifier"`
 	Password   string `json:"password"`
 }
 
 type LoginResponse struct {
-	Message     string     `json:"message"`
-	User        UserDetail `json:"user"`
-	AccessToken string     `json:"accessToken"`
+	Message     string `json:"message"`
+	User        User   `json:"user"`
+	AccessToken string `json:"accessToken"`
 }
 
-type UserDetail struct {
+type User struct {
 	ID        int    `json:"id"`
 	Email     string `json:"email"`
 	Username  string `json:"username"`

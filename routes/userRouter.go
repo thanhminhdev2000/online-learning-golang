@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserRoutes(incomingRoutes *gin.Engine, db *sql.DB) {
-	userGroup := incomingRoutes.Group("/users")
+func UserRoutes(routes *gin.Engine, db *sql.DB) {
+	userGroup := routes.Group("/users")
 	{
 		userGroup.GET("/", middleware.AuthMiddleware(), controllers.GetUsers(db))
 		userGroup.GET("/:user_id", middleware.AuthMiddleware(), controllers.GetUser(db))
