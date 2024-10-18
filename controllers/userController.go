@@ -214,3 +214,27 @@ func Logout() gin.HandlerFunc {
 		})
 	}
 }
+
+func ForgotPassword() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req models.ForgotPasswordRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Email is required"})
+			return
+		}
+
+		err := utils.SendResetEmail(req.Email)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send reset email"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Password reset link sent to your email"})
+	}
+}
+
+func ResetPassword() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+	}
+}

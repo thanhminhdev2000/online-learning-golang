@@ -17,6 +17,8 @@ func UserRoutes(routes *gin.Engine, db *sql.DB) {
 		userGroup.POST("/login", controllers.Login(db))
 		userGroup.POST("/refresh", controllers.RefreshToken())
 		userGroup.POST("/logout", controllers.Logout())
+		userGroup.POST("/forgot-password", controllers.ForgotPassword())
+		userGroup.POST("/reset-password?token=<token>", controllers.ResetPassword())
 	}
 
 }

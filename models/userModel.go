@@ -24,3 +24,7 @@ type User struct {
 	Username string `json:"username"`
 	FullName string `json:"fullName"`
 }
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email"`
+}
