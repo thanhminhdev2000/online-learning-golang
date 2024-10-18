@@ -13,7 +13,7 @@ import (
 
 func GetUsers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		rows, err := db.Query("SELECT id, email, username, firstName, lastName FROM users ORDER BY id")
+		rows, err := db.Query("SELECT id, email, username, fullName FROM users ORDER BY id")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
 			return
@@ -24,7 +24,7 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var user models.User
-			if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.FirstName, &user.LastName); err != nil {
+			if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.FullName); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan user"})
 				return
 			}
@@ -39,10 +39,10 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 func GetUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
-		row := db.QueryRow("SELECT id, email, username, firstName, lastName FROM users WHERE id = ?", userId)
+		row := db.QueryRow("SELECT id, email, username, fullName FROM users WHERE id = ?", userId)
 
 		var user models.User
-		if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FirstName, &user.LastName); err != nil {
+		if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName); err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 				return
@@ -81,8 +81,8 @@ func SignUp(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		query = "INSERT INTO users (email, username, firstName, lastName, password) VALUES (?, ?, ?, ?, ?)"
-		_, err = db.Exec(query, newUser.Email, newUser.Username, newUser.FirstName, newUser.LastName, hashedPassword)
+		query = "INSERT INTO users (email, username, fullName, password) VALUES (?, ?, ?, ?, ?)"
+		_, err = db.Exec(query, newUser.Email, newUser.Username, newUser.FullName, hashedPassword)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 			return
@@ -105,13 +105,13 @@ func Login(db *sql.DB) gin.HandlerFunc {
 		isEmail, _ := regexp.MatchString(`^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$`, loginData.Identifier)
 		var query string
 		if isEmail {
-			query = "SELECT id, email, username, firstName, lastName, password FROM users WHERE email = ?"
+			query = "SELECT id, email, username, fullName, password FROM users WHERE email = ?"
 		} else {
-			query = "SELECT id, email, username, firstName, lastName, password FROM users WHERE username = ?"
+			query = "SELECT id, email, username, fullName, password FROM users WHERE username = ?"
 		}
 
 		err := db.QueryRow(query, loginData.Identifier).
-			Scan(&user.ID, &user.Email, &user.Username, &user.FirstName, &user.LastName, &storedPassword)
+			Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &storedPassword)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
