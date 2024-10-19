@@ -29,9 +29,14 @@ func ConnectMySQL() (*sql.DB, error) {
 	fmt.Println("Successfully connected to MySQL!")
 
 	// DropUsersTable(db)
+	// DropPasswordResetTokensTable(db)
 	err = CreateUsersTable(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create users table: %w", err)
+	}
+	err = CreatePasswordResetTokensTable(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create password_reset_tokens table: %w", err)
 	}
 
 	return db, nil
@@ -59,6 +64,25 @@ func CreateUsersTable(db *sql.DB) error {
 	return nil
 }
 
+func CreatePasswordResetTokensTable(db *sql.DB) error {
+	query := `
+	CREATE TABLE IF NOT EXISTS password_reset_tokens (
+		token VARCHAR(64) PRIMARY KEY,
+		user_id INT NOT NULL,
+		expiry TIMESTAMP NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);`
+
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to create password_reset_tokens table: %w", err)
+	}
+
+	fmt.Println("Table `password_reset_tokens` created successfully!")
+	return nil
+}
+
 func DropUsersTable(db *sql.DB) error {
 	query := "DROP TABLE IF EXISTS users;"
 
@@ -68,5 +92,17 @@ func DropUsersTable(db *sql.DB) error {
 	}
 
 	fmt.Println("Table `users` deleted successfully!")
+	return nil
+}
+
+func DropPasswordResetTokensTable(db *sql.DB) error {
+	query := "DROP TABLE IF EXISTS password_reset_tokens;"
+
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to drop password_reset_tokens table: %w", err)
+	}
+
+	fmt.Println("Table `password_reset_tokens` deleted successfully!")
 	return nil
 }

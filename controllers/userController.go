@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"online-learning-golang/models"
 	"online-learning-golang/utils"
@@ -215,7 +216,7 @@ func Logout() gin.HandlerFunc {
 	}
 }
 
-func ForgotPassword() gin.HandlerFunc {
+func ForgotPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req models.ForgotPasswordRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -223,7 +224,35 @@ func ForgotPassword() gin.HandlerFunc {
 			return
 		}
 
-		err := utils.SendResetEmail(req.Email)
+		// Check if the email exists in the database
+		var user models.User
+		err := db.QueryRow("SELECT id, email FROM users WHERE email = ?", req.Email).Scan(&user.ID, &user.Email)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Email not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query user"})
+			return
+		}
+
+		// Generate a password reset token
+		token, err := utils.GenerateResetToken()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate reset token"})
+			return
+		}
+
+		// Store the token in the password_reset_tokens table
+		expiry := time.Now().Add(1 * time.Hour) // Token expires after 1 hour
+		_, err = db.Exec("INSERT INTO password_reset_tokens (user_id, token, expiry) VALUES (?, ?, ?)", user.ID, token, expiry)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store reset token"})
+			return
+		}
+
+		// Send an email with the password reset link
+		err = utils.SendResetEmail(req.Email, token)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send reset email"})
 			return
@@ -233,8 +262,74 @@ func ForgotPassword() gin.HandlerFunc {
 	}
 }
 
-func ResetPassword() gin.HandlerFunc {
+func ResetPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Step 1: Get the token from query parameters
+		token := c.Query("token")
+		if token == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Token is required"})
+			return
+		}
 
+		// Step 2: Parse the new password from request body
+		var req models.ResetPasswordRequest
+		if err := c.ShouldBindJSON(&req); err != nil || req.Password == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Password is required"})
+			return
+		}
+
+		// Step 3: Verify if the token is valid (e.g., check expiration and existence in DB)
+		var userID int
+		var tokenExpiryRaw []uint8
+		query := "SELECT user_id, expiry FROM password_reset_tokens WHERE token = ?"
+
+		err := db.QueryRow(query, token).Scan(&userID, &tokenExpiryRaw)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify token"})
+			return
+		}
+
+		tokenExpiryString := string(tokenExpiryRaw)
+		tokenExpiry, err := time.Parse("2006-01-02 15:04:05", tokenExpiryString)
+		if err != nil {
+			fmt.Printf("Error parsing expiry time: %v\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse token expiry time"})
+			return
+		}
+
+		if time.Now().After(tokenExpiry) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has expired"})
+			return
+		}
+
+		// Step 4: Hash the new password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+			return
+		}
+
+		// Step 5: Update the password in the users table
+		updateQuery := "UPDATE users SET password = ? WHERE id = ?"
+		_, err = db.Exec(updateQuery, hashedPassword, userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset password"})
+			return
+		}
+
+		// Step 6: Invalidate the token (delete it from the DB)
+		_, err = db.Exec("DELETE FROM password_reset_tokens WHERE token = ?", token)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to invalidate token"})
+			return
+		}
+
+		// Step 7: Respond with success
+		c.JSON(http.StatusOK, gin.H{"message": "Password reset successful"})
 	}
 }

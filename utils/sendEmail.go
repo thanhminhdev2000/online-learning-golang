@@ -18,18 +18,14 @@ func GenerateResetToken() (string, error) {
 	return hex.EncodeToString(token), nil
 }
 
-func SendResetEmail(userEmail string) error {
-	token, err := GenerateResetToken()
-	if err != nil {
-		return err
-	}
-	resetLink := fmt.Sprintf("http://localhost:3000/request-reset-password?token=%s", token)
+func SendResetEmail(userEmail, token string) error {
+	resetLink := fmt.Sprintf("%s/reset-password?token=%s", os.Getenv("CLIENT_URL"), token)
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", "thanhminh.test01@gmail.com")
+	m.SetHeader("From", os.Getenv("SMTP_EMAIL"))
 	m.SetHeader("To", userEmail)
 	m.SetHeader("Subject", "Password Reset")
-	m.SetBody("text/html", fmt.Sprintf("Click <a href='%s'>here</a> to reset your password.", resetLink))
+	m.SetBody("text/html", fmt.Sprintf("Click <a href='%s'>here</a> to reset your pa.Passwordssword.", resetLink))
 
 	d := gomail.NewDialer(os.Getenv("SMTP_HOST"), 587, os.Getenv("SMTP_EMAIL"), os.Getenv("SMTP_PASSWORD"))
 

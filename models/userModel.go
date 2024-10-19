@@ -28,3 +28,7 @@ type User struct {
 type ForgotPasswordRequest struct {
 	Email string `json:"email"`
 }
+
+type ResetPasswordRequest struct {
+	Password string `json:"password"`
+}
