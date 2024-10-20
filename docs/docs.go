@@ -398,11 +398,11 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Soft delete a user by user ID",
+                "description": "Delete a user by user ID",
                 "tags": [
                     "users"
                 ],
-                "summary": "Soft delete user",
+                "summary": "Delete user",
                 "parameters": [
                     {
                         "type": "integer",
@@ -434,7 +434,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/{user_id}/change-password": {
+        "/user/{user_id}/password": {
             "put": {
                 "security": [
                     {
@@ -466,7 +466,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.ChangePasswordRequest"
+                            "$ref": "#/definitions/models.PasswordUpdateRequest"
                         }
                     }
                 ],
@@ -504,17 +504,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "accessToken": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.ChangePasswordRequest": {
-            "type": "object",
-            "properties": {
-                "currentPassword": {
-                    "type": "string"
-                },
-                "newPassword": {
                     "type": "string"
                 }
             }
@@ -564,6 +553,17 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PasswordUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "currentPassword": {
+                    "type": "string"
+                },
+                "newPassword": {
                     "type": "string"
                 }
             }

@@ -435,7 +435,7 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// ChangePassword godoc
+// Password godoc
 // @Summary Change user password
 // @Description Change the user's password
 // @Tags users
@@ -443,13 +443,13 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param user_id path int true "User ID"
-// @Param password body ChangePasswordRequest true "Password data"
+// @Param password body PasswordUpdateRequest true "Password data"
 // @Success 200 {object} Message
 // @Failure 400 {object} Error
 // @Failure 404 {object} Error
 // @Failure 401 {object} Error
-// @Router /user/{user_id}/change-password [put]
-func ChangePassword(db *sql.DB) gin.HandlerFunc {
+// @Router /user/{user_id}/password [put]
+func PasswordUpdate(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
 
@@ -497,8 +497,8 @@ func ChangePassword(db *sql.DB) gin.HandlerFunc {
 }
 
 // DeleteUser godoc
-// @Summary Soft delete user
-// @Description Soft delete a user by user ID
+// @Summary Delete user
+// @Description Delete a user by user ID
 // @Tags users
 // @Security BearerAuth
 // @Param user_id path int true "User ID"

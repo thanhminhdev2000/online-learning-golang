@@ -5,13 +5,6 @@ definitions:
       accessToken:
         type: string
     type: object
-  models.ChangePasswordRequest:
-    properties:
-      currentPassword:
-        type: string
-      newPassword:
-        type: string
-    type: object
   models.Error:
     properties:
       error:
@@ -41,6 +34,13 @@ definitions:
   models.Message:
     properties:
       message:
+        type: string
+    type: object
+  models.PasswordUpdateRequest:
+    properties:
+      currentPassword:
+        type: string
+      newPassword:
         type: string
     type: object
   models.ResetPasswordRequest:
@@ -104,7 +104,7 @@ paths:
       - users
   /user/{user_id}:
     delete:
-      description: Soft delete a user by user ID
+      description: Delete a user by user ID
       parameters:
       - description: User ID
         in: path
@@ -126,7 +126,7 @@ paths:
             $ref: '#/definitions/models.Error'
       security:
       - BearerAuth: []
-      summary: Soft delete user
+      summary: Delete user
       tags:
       - users
     get:
@@ -193,7 +193,7 @@ paths:
       summary: Update user information
       tags:
       - users
-  /user/{user_id}/change-password:
+  /user/{user_id}/password:
     put:
       consumes:
       - application/json
@@ -209,7 +209,7 @@ paths:
         name: password
         required: true
         schema:
-          $ref: '#/definitions/models.ChangePasswordRequest'
+          $ref: '#/definitions/models.PasswordUpdateRequest'
       produces:
       - application/json
       responses:

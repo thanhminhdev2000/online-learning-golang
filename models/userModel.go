@@ -37,7 +37,7 @@ type AccessTokenReponse struct {
 	AccessToken string `json:"accessToken"`
 }
 
-type ChangePasswordRequest struct {
+type PasswordUpdateRequest struct {
 	CurrentPassword string `json:"currentPassword"`
 	NewPassword     string `json:"newPassword"`
 }
