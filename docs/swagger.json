@@ -14,7 +14,7 @@
     "host": "localhost:8080",
     "basePath": "/api/v1",
     "paths": {
-        "/users/": {
+        "/user/": {
             "get": {
                 "security": [
                     {
@@ -48,7 +48,7 @@
                 }
             }
         },
-        "/users/forgot-password": {
+        "/user/forgot-password": {
             "post": {
                 "description": "Send a password reset link to the user's email",
                 "consumes": [
@@ -94,7 +94,7 @@
                 }
             }
         },
-        "/users/login": {
+        "/user/login": {
             "post": {
                 "description": "Log in a user using email or username and password",
                 "consumes": [
@@ -140,7 +140,7 @@
                 }
             }
         },
-        "/users/logout": {
+        "/user/logout": {
             "post": {
                 "description": "Log out the user by clearing the refresh token",
                 "produces": [
@@ -160,7 +160,7 @@
                 }
             }
         },
-        "/users/refresh": {
+        "/user/refresh": {
             "post": {
                 "description": "Refresh the access token using the refresh token",
                 "produces": [
@@ -186,7 +186,7 @@
                 }
             }
         },
-        "/users/reset-password": {
+        "/user/reset-password": {
             "post": {
                 "description": "Reset the user's password using a valid token",
                 "consumes": [
@@ -239,7 +239,7 @@
                 }
             }
         },
-        "/users/signup": {
+        "/user/signup": {
             "post": {
                 "description": "Register a new user with email, username, and password",
                 "consumes": [
@@ -285,7 +285,7 @@
                 }
             }
         },
-        "/users/{user_id}": {
+        "/user/{user_id}": {
             "get": {
                 "security": [
                     {
@@ -428,7 +428,7 @@
                 }
             }
         },
-        "/users/{user_id}/change-password": {
+        "/user/{user_id}/change-password": {
             "put": {
                 "security": [
                     {

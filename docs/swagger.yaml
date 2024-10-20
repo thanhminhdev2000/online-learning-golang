@@ -81,7 +81,7 @@ info:
   title: Online Learning API
   version: "1.0"
 paths:
-  /users/:
+  /user/:
     get:
       description: Retrieve a list of all users
       produces:
@@ -102,7 +102,7 @@ paths:
       summary: Get all users
       tags:
       - users
-  /users/{user_id}:
+  /user/{user_id}:
     delete:
       description: Soft delete a user by user ID
       parameters:
@@ -193,7 +193,7 @@ paths:
       summary: Update user information
       tags:
       - users
-  /users/{user_id}/change-password:
+  /user/{user_id}/change-password:
     put:
       consumes:
       - application/json
@@ -234,7 +234,7 @@ paths:
       summary: Change user password
       tags:
       - users
-  /users/forgot-password:
+  /user/forgot-password:
     post:
       consumes:
       - application/json
@@ -264,7 +264,7 @@ paths:
       summary: Request password reset
       tags:
       - users
-  /users/login:
+  /user/login:
     post:
       consumes:
       - application/json
@@ -294,7 +294,7 @@ paths:
       summary: Log in an existing user
       tags:
       - users
-  /users/logout:
+  /user/logout:
     post:
       description: Log out the user by clearing the refresh token
       produces:
@@ -307,7 +307,7 @@ paths:
       summary: Log out the user
       tags:
       - users
-  /users/refresh:
+  /user/refresh:
     post:
       description: Refresh the access token using the refresh token
       produces:
@@ -324,7 +324,7 @@ paths:
       summary: Refresh access token
       tags:
       - users
-  /users/reset-password:
+  /user/reset-password:
     post:
       consumes:
       - application/json
@@ -359,7 +359,7 @@ paths:
       summary: Reset user password
       tags:
       - users
-  /users/signup:
+  /user/signup:
     post:
       consumes:
       - application/json

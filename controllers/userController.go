@@ -26,7 +26,7 @@ import (
 // @Success 200 {object} Message
 // @Failure 400 {object} Error
 // @Failure 409 {object} Error
-// @Router /users/signup [post]
+// @Router /user/signup [post]
 func SignUp(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var newUser SignUpRequest
@@ -74,7 +74,7 @@ func SignUp(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} LoginResponse
 // @Failure 400 {object} Error
 // @Failure 401 {object} Error
-// @Router /users/login [post]
+// @Router /user/login [post]
 func Login(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginData LoginRequest
@@ -150,7 +150,7 @@ func Login(db *sql.DB) gin.HandlerFunc {
 // @Produce json
 // @Success 200 {object} AccessTokenReponse
 // @Failure 401 {object} Error
-// @Router /users/refresh [post]
+// @Router /user/refresh [post]
 func RefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var jwtKey = []byte(os.Getenv("JWT_KEY"))
@@ -199,7 +199,7 @@ func RefreshToken() gin.HandlerFunc {
 // @Tags users
 // @Produce json
 // @Success 200 {object} Message
-// @Router /users/logout [post]
+// @Router /user/logout [post]
 func Logout() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.SetCookie("refreshToken", "", -1, "/", "localhost", false, true)
@@ -217,7 +217,7 @@ func Logout() gin.HandlerFunc {
 // @Success 200 {object} Message
 // @Failure 400 {object} Error
 // @Failure 404 {object} Error
-// @Router /users/forgot-password [post]
+// @Router /user/forgot-password [post]
 func ForgotPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req ForgotPasswordRequest
@@ -271,7 +271,7 @@ func ForgotPassword(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} Message
 // @Failure 400 {object} Error
 // @Failure 401 {object} Error
-// @Router /users/reset-password [post]
+// @Router /user/reset-password [post]
 func ResetPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Query("token")
@@ -345,7 +345,7 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 // @Produce json
 // @Success 200 {array} UserDetail
 // @Failure 500 {object} Error
-// @Router /users/ [get]
+// @Router /user/ [get]
 func GetUsers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rows, err := db.Query("SELECT id, email, username, fullName FROM users FROM users WHERE deleted_at IS NULL")
@@ -381,7 +381,7 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} UserDetail
 // @Failure 404 {object} Error
 // @Failure 500 {object} Error
-// @Router /users/{user_id} [get]
+// @Router /user/{user_id} [get]
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
@@ -413,7 +413,7 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} Message
 // @Failure 400 {object} Error
 // @Failure 500 {object} Error
-// @Router /users/{user_id} [put]
+// @Router /user/{user_id} [put]
 func UpdateUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
@@ -448,7 +448,7 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 // @Failure 400 {object} Error
 // @Failure 404 {object} Error
 // @Failure 401 {object} Error
-// @Router /users/{user_id}/change-password [put]
+// @Router /user/{user_id}/change-password [put]
 func ChangePassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
@@ -505,7 +505,7 @@ func ChangePassword(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} Message
 // @Failure 404 {object} Error
 // @Failure 500 {object} Error
-// @Router /users/{user_id} [delete]
+// @Router /user/{user_id} [delete]
 func DeleteUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
