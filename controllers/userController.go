@@ -348,7 +348,7 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 // @Router /users/ [get]
 func GetUsers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		rows, err := db.Query("SELECT id, email, username, fullName FROM users ORDER BY id")
+		rows, err := db.Query("SELECT id, email, username, fullName FROM users FROM users WHERE deleted_at IS NULL")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to fetch users"})
 			return
@@ -513,7 +513,7 @@ func DeleteUser(db *sql.DB) gin.HandlerFunc {
 		query := "UPDATE users SET deleted_at = NOW() WHERE id = ?"
 		result, err := db.Exec(query, userId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to soft delete user"})
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete user"})
 			return
 		}
 
