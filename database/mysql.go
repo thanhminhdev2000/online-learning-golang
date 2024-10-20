@@ -36,7 +36,7 @@ func ConnectMySQL() (*sql.DB, error) {
 	}
 	err = CreatePasswordResetTokensTable(db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create password_reset_tokens table: %w", err)
+		return nil, fmt.Errorf("failed to create reset_pw_tokens table: %w", err)
 	}
 
 	return db, nil
@@ -67,7 +67,7 @@ func CreateUsersTable(db *sql.DB) error {
 
 func CreatePasswordResetTokensTable(db *sql.DB) error {
 	query := `
-	CREATE TABLE IF NOT EXISTS password_reset_tokens (
+	CREATE TABLE IF NOT EXISTS reset_pw_tokens (
 		token VARCHAR(64) PRIMARY KEY,
 		user_id INT NOT NULL,
 		expiry TIMESTAMP NOT NULL,
@@ -77,10 +77,10 @@ func CreatePasswordResetTokensTable(db *sql.DB) error {
 
 	_, err := db.Exec(query)
 	if err != nil {
-		return fmt.Errorf("failed to create password_reset_tokens table: %w", err)
+		return fmt.Errorf("failed to create reset_pw_tokens table: %w", err)
 	}
 
-	fmt.Println("Table `password_reset_tokens` created successfully!")
+	fmt.Println("Table `reset_pw_tokens` created successfully!")
 	return nil
 }
 
@@ -97,13 +97,13 @@ func DropUsersTable(db *sql.DB) error {
 }
 
 func DropPasswordResetTokensTable(db *sql.DB) error {
-	query := "DROP TABLE IF EXISTS password_reset_tokens;"
+	query := "DROP TABLE IF EXISTS reset_pw_tokens;"
 
 	_, err := db.Exec(query)
 	if err != nil {
-		return fmt.Errorf("failed to drop password_reset_tokens table: %w", err)
+		return fmt.Errorf("failed to drop reset_pw_tokens table: %w", err)
 	}
 
-	fmt.Println("Table `password_reset_tokens` deleted successfully!")
+	fmt.Println("Table `reset_pw_tokens` deleted successfully!")
 	return nil
 }

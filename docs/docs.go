@@ -180,7 +180,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.AccessTokenReponse"
+                            "$ref": "#/definitions/models.AccessTokenResponse"
                         }
                     },
                     "401": {
@@ -500,7 +500,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "models.AccessTokenReponse": {
+        "models.AccessTokenResponse": {
             "type": "object",
             "properties": {
                 "accessToken": {
@@ -510,6 +510,9 @@ const docTemplate = `{
         },
         "models.Error": {
             "type": "object",
+            "required": [
+                "error"
+            ],
             "properties": {
                 "error": {
                     "type": "string"
@@ -518,6 +521,9 @@ const docTemplate = `{
         },
         "models.ForgotPasswordRequest": {
             "type": "object",
+            "required": [
+                "email"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -526,6 +532,10 @@ const docTemplate = `{
         },
         "models.LoginRequest": {
             "type": "object",
+            "required": [
+                "identifier",
+                "password"
+            ],
             "properties": {
                 "identifier": {
                     "type": "string"
@@ -537,6 +547,11 @@ const docTemplate = `{
         },
         "models.LoginResponse": {
             "type": "object",
+            "required": [
+                "accessToken",
+                "message",
+                "user"
+            ],
             "properties": {
                 "accessToken": {
                     "type": "string"
@@ -551,6 +566,9 @@ const docTemplate = `{
         },
         "models.Message": {
             "type": "object",
+            "required": [
+                "message"
+            ],
             "properties": {
                 "message": {
                     "type": "string"
@@ -559,25 +577,40 @@ const docTemplate = `{
         },
         "models.PasswordUpdateRequest": {
             "type": "object",
+            "required": [
+                "currentPassword",
+                "newPassword"
+            ],
             "properties": {
                 "currentPassword": {
                     "type": "string"
                 },
                 "newPassword": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 }
             }
         },
         "models.ResetPasswordRequest": {
             "type": "object",
+            "required": [
+                "password"
+            ],
             "properties": {
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 }
             }
         },
         "models.SignUpRequest": {
             "type": "object",
+            "required": [
+                "email",
+                "fullName",
+                "password",
+                "username"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -586,7 +619,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 },
                 "username": {
                     "type": "string"
@@ -595,6 +629,12 @@ const docTemplate = `{
         },
         "models.UserDetail": {
             "type": "object",
+            "required": [
+                "email",
+                "fullName",
+                "id",
+                "username"
+            ],
             "properties": {
                 "email": {
                     "type": "string"

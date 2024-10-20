@@ -56,7 +56,7 @@ func main() {
 
 	apiPrefix := os.Getenv("API_PREFIX")
 
-	userGroup := router.Group(apiPrefix + "/user")
+	userGroup := router.Group(apiPrefix + "/users")
 	routes.UserRoutes(userGroup, db)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

@@ -148,7 +148,7 @@ func Login(db *sql.DB) gin.HandlerFunc {
 // @Description Refresh the access token using the refresh token
 // @Tags users
 // @Produce json
-// @Success 200 {object} models.AccessTokenReponse
+// @Success 200 {object} models.AccessTokenResponse
 // @Failure 401 {object} models.Error
 // @Router /users/refresh [post]
 func RefreshToken() gin.HandlerFunc {
@@ -187,7 +187,7 @@ func RefreshToken() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, models.AccessTokenReponse{
+		c.JSON(http.StatusOK, models.AccessTokenResponse{
 			AccessToken: accessToken,
 		})
 	}
@@ -244,7 +244,7 @@ func ForgotPassword(db *sql.DB) gin.HandlerFunc {
 		}
 
 		expiry := time.Now().Add(1 * time.Hour)
-		_, err = db.Exec("INSERT INTO password_reset_tokens (user_id, token, expiry) VALUES (?, ?, ?)", user.ID, token, expiry)
+		_, err = db.Exec("INSERT INTO reset_pw_tokens (user_id, token, expiry) VALUES (?, ?, ?)", user.ID, token, expiry)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to store reset token"})
 			return
@@ -288,7 +288,7 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 
 		var userID int
 		var tokenExpiryRaw []uint8
-		query := "SELECT user_id, expiry FROM password_reset_tokens WHERE token = ?"
+		query := "SELECT user_id, expiry FROM reset_pw_tokens WHERE token = ?"
 
 		err := db.QueryRow(query, token).Scan(&userID, &tokenExpiryRaw)
 		if err != nil {
@@ -327,7 +327,7 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		_, err = db.Exec("DELETE FROM password_reset_tokens WHERE token = ?", token)
+		_, err = db.Exec("DELETE FROM reset_pw_tokens WHERE token = ?", token)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to invalidate token"})
 			return
@@ -348,7 +348,7 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 // @Router /users/ [get]
 func GetUsers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		rows, err := db.Query("SELECT id, email, username, fullName FROM users FROM users WHERE deleted_at IS NULL")
+		rows, err := db.Query("SELECT id, email, username, fullName FROM users WHERE deleted_at IS NULL")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to fetch users"})
 			return

@@ -1,43 +1,43 @@
 package models
 
 type SignUpRequest struct {
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	FullName string `json:"fullName"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Username string `json:"username" validate:"required"`
+	FullName string `json:"fullName" validate:"required"`
+	Password string `json:"password" validate:"required,min=6"`
 }
 
 type LoginRequest struct {
-	Identifier string `json:"identifier"`
-	Password   string `json:"password"`
+	Identifier string `json:"identifier" validate:"required"`
+	Password   string `json:"password" validate:"required"`
 }
 
 type LoginResponse struct {
-	Message     string     `json:"message"`
-	User        UserDetail `json:"user"`
-	AccessToken string     `json:"accessToken"`
+	Message     string     `json:"message" validate:"required"`
+	User        UserDetail `json:"user" validate:"required"`
+	AccessToken string     `json:"accessToken" validate:"required"`
 }
 
 type UserDetail struct {
-	ID       int    `json:"id"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	FullName string `json:"fullName"`
+	ID       int    `json:"id" validate:"required"`
+	Email    string `json:"email" validate:"required"`
+	Username string `json:"username" validate:"required"`
+	FullName string `json:"fullName" validate:"required"`
 }
 
 type ForgotPasswordRequest struct {
-	Email string `json:"email"`
+	Email string `json:"email" validate:"required,email"`
 }
 
 type ResetPasswordRequest struct {
-	Password string `json:"password"`
+	Password string `json:"password" validate:"required,min=6"`
 }
 
-type AccessTokenReponse struct {
+type AccessTokenResponse struct {
 	AccessToken string `json:"accessToken"`
 }
 
 type PasswordUpdateRequest struct {
-	CurrentPassword string `json:"currentPassword"`
-	NewPassword     string `json:"newPassword"`
+	CurrentPassword string `json:"currentPassword" validate:"required"`
+	NewPassword     string `json:"newPassword" validate:"required,min=6"`
 }

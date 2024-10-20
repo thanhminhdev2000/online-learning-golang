@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  models.AccessTokenReponse:
+  models.AccessTokenResponse:
     properties:
       accessToken:
         type: string
@@ -9,11 +9,15 @@ definitions:
     properties:
       error:
         type: string
+    required:
+    - error
     type: object
   models.ForgotPasswordRequest:
     properties:
       email:
         type: string
+    required:
+    - email
     type: object
   models.LoginRequest:
     properties:
@@ -21,6 +25,9 @@ definitions:
         type: string
       password:
         type: string
+    required:
+    - identifier
+    - password
     type: object
   models.LoginResponse:
     properties:
@@ -30,23 +37,36 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/models.UserDetail'
+    required:
+    - accessToken
+    - message
+    - user
     type: object
   models.Message:
     properties:
       message:
         type: string
+    required:
+    - message
     type: object
   models.PasswordUpdateRequest:
     properties:
       currentPassword:
         type: string
       newPassword:
+        minLength: 6
         type: string
+    required:
+    - currentPassword
+    - newPassword
     type: object
   models.ResetPasswordRequest:
     properties:
       password:
+        minLength: 6
         type: string
+    required:
+    - password
     type: object
   models.SignUpRequest:
     properties:
@@ -55,9 +75,15 @@ definitions:
       fullName:
         type: string
       password:
+        minLength: 6
         type: string
       username:
         type: string
+    required:
+    - email
+    - fullName
+    - password
+    - username
     type: object
   models.UserDetail:
     properties:
@@ -69,6 +95,11 @@ definitions:
         type: integer
       username:
         type: string
+    required:
+    - email
+    - fullName
+    - id
+    - username
     type: object
 host: localhost:8080
 info:
@@ -316,7 +347,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.AccessTokenReponse'
+            $ref: '#/definitions/models.AccessTokenResponse'
         "401":
           description: Unauthorized
           schema:

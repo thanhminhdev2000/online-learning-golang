@@ -174,7 +174,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.AccessTokenReponse"
+                            "$ref": "#/definitions/models.AccessTokenResponse"
                         }
                     },
                     "401": {
@@ -494,7 +494,7 @@
         }
     },
     "definitions": {
-        "models.AccessTokenReponse": {
+        "models.AccessTokenResponse": {
             "type": "object",
             "properties": {
                 "accessToken": {
@@ -504,6 +504,9 @@
         },
         "models.Error": {
             "type": "object",
+            "required": [
+                "error"
+            ],
             "properties": {
                 "error": {
                     "type": "string"
@@ -512,6 +515,9 @@
         },
         "models.ForgotPasswordRequest": {
             "type": "object",
+            "required": [
+                "email"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -520,6 +526,10 @@
         },
         "models.LoginRequest": {
             "type": "object",
+            "required": [
+                "identifier",
+                "password"
+            ],
             "properties": {
                 "identifier": {
                     "type": "string"
@@ -531,6 +541,11 @@
         },
         "models.LoginResponse": {
             "type": "object",
+            "required": [
+                "accessToken",
+                "message",
+                "user"
+            ],
             "properties": {
                 "accessToken": {
                     "type": "string"
@@ -545,6 +560,9 @@
         },
         "models.Message": {
             "type": "object",
+            "required": [
+                "message"
+            ],
             "properties": {
                 "message": {
                     "type": "string"
@@ -553,25 +571,40 @@
         },
         "models.PasswordUpdateRequest": {
             "type": "object",
+            "required": [
+                "currentPassword",
+                "newPassword"
+            ],
             "properties": {
                 "currentPassword": {
                     "type": "string"
                 },
                 "newPassword": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 }
             }
         },
         "models.ResetPasswordRequest": {
             "type": "object",
+            "required": [
+                "password"
+            ],
             "properties": {
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 }
             }
         },
         "models.SignUpRequest": {
             "type": "object",
+            "required": [
+                "email",
+                "fullName",
+                "password",
+                "username"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -580,7 +613,8 @@
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 },
                 "username": {
                     "type": "string"
@@ -589,6 +623,12 @@
         },
         "models.UserDetail": {
             "type": "object",
+            "required": [
+                "email",
+                "fullName",
+                "id",
+                "username"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
