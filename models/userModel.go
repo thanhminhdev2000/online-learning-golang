@@ -1,6 +1,6 @@
 package models
 
-type SignUp struct {
+type SignUpRequest struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	FullName string `json:"fullName"`
@@ -13,12 +13,12 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Message     string `json:"message"`
-	User        User   `json:"user"`
-	AccessToken string `json:"accessToken"`
+	Message     string     `json:"message"`
+	User        UserDetail `json:"user"`
+	AccessToken string     `json:"accessToken"`
 }
 
-type User struct {
+type UserDetail struct {
 	ID       int    `json:"id"`
 	Email    string `json:"email"`
 	Username string `json:"username"`
@@ -31,4 +31,13 @@ type ForgotPasswordRequest struct {
 
 type ResetPasswordRequest struct {
 	Password string `json:"password"`
+}
+
+type AccessTokenReponse struct {
+	AccessToken string `json:"accessToken"`
+}
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
 }

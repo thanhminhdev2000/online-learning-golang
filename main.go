@@ -4,11 +4,33 @@ import (
 	"log"
 	"online-learning-golang/database"
 	"online-learning-golang/routes"
+	"os"
 
 	"github.com/gin-contrib/cors"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+
+	_ "online-learning-golang/docs"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+// @title Online Learning API
+// @version 1.0
+// @description This is an online learning API server.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 
 func main() {
 	err := godotenv.Load()
@@ -32,7 +54,12 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	routes.UserRoutes(router, db)
+	apiPrefix := os.Getenv("API_PREFIX")
 
-	router.Run()
+	userGroup := router.Group(apiPrefix + "/users")
+	routes.UserRoutes(userGroup, db)
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	router.Run("localhost:8080")
 }

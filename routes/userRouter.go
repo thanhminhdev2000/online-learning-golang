@@ -8,16 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserRoutes(routes *gin.Engine, db *sql.DB) {
-	userGroup := routes.Group("/users")
-	{
-		userGroup.GET("/", middleware.AuthMiddleware(), controllers.GetUsers(db))
-		userGroup.GET("/:user_id", middleware.AuthMiddleware(), controllers.GetUser(db))
-		userGroup.POST("/signup", controllers.SignUp(db))
-		userGroup.POST("/login", controllers.Login(db))
-		userGroup.POST("/refresh", controllers.RefreshToken())
-		userGroup.POST("/logout", controllers.Logout())
-		userGroup.POST("/forgot-password", controllers.ForgotPassword(db))
-		userGroup.POST("/reset-password", controllers.ResetPassword(db))
-	}
+func UserRoutes(router *gin.RouterGroup, db *sql.DB) {
+	router.POST("/signup", controllers.SignUp(db))
+	router.POST("/login", controllers.Login(db))
+	router.POST("/refresh", controllers.RefreshToken())
+	router.POST("/logout", controllers.Logout())
+	router.POST("/forgot-password", controllers.ForgotPassword(db))
+	router.POST("/reset-password", controllers.ResetPassword(db))
+
+	router.GET("/", middleware.AuthMiddleware(), controllers.GetUsers(db))
+	router.GET("/:user_id", middleware.AuthMiddleware(), controllers.GetUserByID(db))
+	router.PUT("/:user_id", middleware.AuthMiddleware(), controllers.UpdateUser(db))
+	router.PUT("/:user_id/change-password", middleware.AuthMiddleware(), controllers.ChangePassword(db))
+	router.DELETE("/:user_id", middleware.AuthMiddleware(), controllers.DeleteUser(db))
 }
