@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"online-learning-golang/models"
+	. "online-learning-golang/models"
 	"online-learning-golang/utils"
 	"os"
 	"regexp"
@@ -22,16 +22,16 @@ import (
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body models.SignUpRequest true "User data"
-// @Success 200 {object} models.Message
-// @Failure 400 {object} models.Error
-// @Failure 409 {object} models.Error
+// @Param user body SignUpRequest true "User data"
+// @Success 200 {object} Message
+// @Failure 400 {object} Error
+// @Failure 409 {object} Error
 // @Router /users/signup [post]
 func SignUp(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var newUser models.SignUpRequest
+		var newUser SignUpRequest
 		if err := c.ShouldBindJSON(&newUser); err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
+			c.JSON(http.StatusBadRequest, Error{Error: "Invalid request body"})
 			return
 		}
 
@@ -39,28 +39,28 @@ func SignUp(db *sql.DB) gin.HandlerFunc {
 		query := "SELECT EXISTS(SELECT 1 FROM users WHERE email = ? OR username = ?)"
 		err := db.QueryRow(query, newUser.Email, newUser.Username).Scan(&exists)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to check for existing user"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to check for existing user"})
 			return
 		}
 		if exists {
-			c.JSON(http.StatusConflict, models.Error{Error: "Email or username already exists"})
+			c.JSON(http.StatusConflict, Error{Error: "Email or username already exists"})
 			return
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to hash password"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to hash password"})
 			return
 		}
 
 		query = "INSERT INTO users (email, username, fullName, password) VALUES (?, ?, ?, ?)"
 		_, err = db.Exec(query, newUser.Email, newUser.Username, newUser.FullName, hashedPassword)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to register user"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to register user"})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "User registered successfully"})
+		c.JSON(http.StatusOK, Message{Message: "User registered successfully"})
 	}
 }
 
@@ -70,21 +70,21 @@ func SignUp(db *sql.DB) gin.HandlerFunc {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body models.LoginRequest true "Login credentials"
-// @Success 200 {object} models.LoginResponse
-// @Failure 400 {object} models.Error
-// @Failure 401 {object} models.Error
+// @Param user body LoginRequest true "Login credentials"
+// @Success 200 {object} LoginResponse
+// @Failure 400 {object} Error
+// @Failure 401 {object} Error
 // @Router /users/login [post]
 func Login(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var loginData models.LoginRequest
+		var loginData LoginRequest
 		if err := c.ShouldBindJSON(&loginData); err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
+			c.JSON(http.StatusBadRequest, Error{Error: "Invalid request body"})
 			return
 		}
 
 		var storedPassword string
-		var user models.UserDetail
+		var user UserDetail
 		isEmail, _ := regexp.MatchString(`^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$`, loginData.Identifier)
 		var query string
 		if isEmail {
@@ -97,28 +97,28 @@ func Login(db *sql.DB) gin.HandlerFunc {
 			Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &storedPassword)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid email or password"})
+				c.JSON(http.StatusUnauthorized, Error{Error: "Invalid email or password"})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Database query error"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Database query error"})
 			return
 		}
 
 		err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(loginData.Password))
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid email or password"})
+			c.JSON(http.StatusUnauthorized, Error{Error: "Invalid email or password"})
 			return
 		}
 
 		accessToken, err := utils.CreateAccessToken(user.ID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate access token"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to generate access token"})
 			return
 		}
 
 		refreshToken, err := utils.CreateRefreshToken(user.ID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate refresh token"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to generate refresh token"})
 			return
 		}
 
@@ -133,7 +133,7 @@ func Login(db *sql.DB) gin.HandlerFunc {
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		response := models.LoginResponse{
+		response := LoginResponse{
 			Message:     "Login successful",
 			User:        user,
 			AccessToken: accessToken,
@@ -148,15 +148,15 @@ func Login(db *sql.DB) gin.HandlerFunc {
 // @Description Refresh the access token using the refresh token
 // @Tags users
 // @Produce json
-// @Success 200 {object} models.AccessTokenReponse
-// @Failure 401 {object} models.Error
+// @Success 200 {object} AccessTokenReponse
+// @Failure 401 {object} Error
 // @Router /users/refresh [post]
 func RefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var jwtKey = []byte(os.Getenv("JWT_KEY"))
 		refreshToken, err := c.Cookie("refreshToken")
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "No refresh token found in cookies"})
+			c.JSON(http.StatusUnauthorized, Error{Error: "No refresh token found in cookies"})
 			return
 		}
 
@@ -165,29 +165,29 @@ func RefreshToken() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid refresh token"})
+			c.JSON(http.StatusUnauthorized, Error{Error: "Invalid refresh token"})
 			return
 		}
 
 		claims, ok := token.Claims.(*jwt.RegisteredClaims)
 		if !ok || claims.ExpiresAt.Time.Before(time.Now()) {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "Expired or invalid refresh token"})
+			c.JSON(http.StatusUnauthorized, Error{Error: "Expired or invalid refresh token"})
 			return
 		}
 
 		userID, err := strconv.Atoi(claims.Subject)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Invalid userID"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Invalid userID"})
 			return
 		}
 
 		accessToken, err := utils.CreateAccessToken(userID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate access token"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to generate access token"})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.AccessTokenReponse{
+		c.JSON(http.StatusOK, AccessTokenReponse{
 			AccessToken: accessToken,
 		})
 	}
@@ -198,12 +198,12 @@ func RefreshToken() gin.HandlerFunc {
 // @Description Log out the user by clearing the refresh token
 // @Tags users
 // @Produce json
-// @Success 200 {object} models.Message
+// @Success 200 {object} Message
 // @Router /users/logout [post]
 func Logout() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.SetCookie("refreshToken", "", -1, "/", "localhost", false, true)
-		c.JSON(http.StatusOK, models.Message{Message: "Logout successful"})
+		c.JSON(http.StatusOK, Message{Message: "Logout successful"})
 	}
 }
 
@@ -213,50 +213,50 @@ func Logout() gin.HandlerFunc {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param email body models.ForgotPasswordRequest true "User email"
-// @Success 200 {object} models.Message
-// @Failure 400 {object} models.Error
-// @Failure 404 {object} models.Error
+// @Param email body ForgotPasswordRequest true "User email"
+// @Success 200 {object} Message
+// @Failure 400 {object} Error
+// @Failure 404 {object} Error
 // @Router /users/forgot-password [post]
 func ForgotPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req models.ForgotPasswordRequest
+		var req ForgotPasswordRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Email is required"})
+			c.JSON(http.StatusBadRequest, Error{Error: "Email is required"})
 			return
 		}
 
-		var user models.UserDetail
+		var user UserDetail
 		err := db.QueryRow("SELECT id, email FROM users WHERE email = ?", req.Email).Scan(&user.ID, &user.Email)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				c.JSON(http.StatusNotFound, models.Error{Error: "Email not found"})
+				c.JSON(http.StatusNotFound, Error{Error: "Email not found"})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to query user"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to query user"})
 			return
 		}
 
 		token, err := utils.GenerateResetToken()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate reset token"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to generate reset token"})
 			return
 		}
 
 		expiry := time.Now().Add(1 * time.Hour)
 		_, err = db.Exec("INSERT INTO password_reset_tokens (user_id, token, expiry) VALUES (?, ?, ?)", user.ID, token, expiry)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to store reset token"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to store reset token"})
 			return
 		}
 
 		err = utils.SendResetEmail(req.Email, token)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to send reset email"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to send reset email"})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "Password reset link sent to your email"})
+		c.JSON(http.StatusOK, Message{Message: "Password reset link sent to your email"})
 	}
 }
 
@@ -267,22 +267,22 @@ func ForgotPassword(db *sql.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param token query string true "Reset token"
-// @Param password body models.ResetPasswordRequest true "New password"
-// @Success 200 {object} models.Message
-// @Failure 400 {object} models.Error
-// @Failure 401 {object} models.Error
+// @Param password body ResetPasswordRequest true "New password"
+// @Success 200 {object} Message
+// @Failure 400 {object} Error
+// @Failure 401 {object} Error
 // @Router /users/reset-password [post]
 func ResetPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Query("token")
 		if token == "" {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Token is required"})
+			c.JSON(http.StatusBadRequest, Error{Error: "Token is required"})
 			return
 		}
 
-		var req models.ResetPasswordRequest
+		var req ResetPasswordRequest
 		if err := c.ShouldBindJSON(&req); err != nil || req.Password == "" {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Password is required"})
+			c.JSON(http.StatusBadRequest, Error{Error: "Password is required"})
 			return
 		}
 
@@ -293,11 +293,11 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 		err := db.QueryRow(query, token).Scan(&userID, &tokenExpiryRaw)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid or expired token"})
+				c.JSON(http.StatusUnauthorized, Error{Error: "Invalid or expired token"})
 				return
 			}
 
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to verify token"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to verify token"})
 			return
 		}
 
@@ -305,35 +305,35 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 		tokenExpiry, err := time.Parse("2006-01-02 15:04:05", tokenExpiryString)
 		if err != nil {
 			fmt.Printf("Error parsing expiry time: %v\n", err)
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to parse token expiry time"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to parse token expiry time"})
 			return
 		}
 
 		if time.Now().After(tokenExpiry) {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "Token has expired"})
+			c.JSON(http.StatusUnauthorized, Error{Error: "Token has expired"})
 			return
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to hash password"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to hash password"})
 			return
 		}
 
 		updateQuery := "UPDATE users SET password = ? WHERE id = ?"
 		_, err = db.Exec(updateQuery, hashedPassword, userID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to reset password"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to reset password"})
 			return
 		}
 
 		_, err = db.Exec("DELETE FROM password_reset_tokens WHERE token = ?", token)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to invalidate token"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to invalidate token"})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "Password reset successful"})
+		c.JSON(http.StatusOK, Message{Message: "Password reset successful"})
 	}
 }
 
@@ -343,24 +343,24 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 // @Tags users
 // @Security BearerAuth
 // @Produce json
-// @Success 200 {array} models.UserDetail
-// @Failure 500 {object} models.Error
+// @Success 200 {array} UserDetail
+// @Failure 500 {object} Error
 // @Router /users/ [get]
 func GetUsers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rows, err := db.Query("SELECT id, email, username, fullName FROM users FROM users WHERE deleted_at IS NULL")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to fetch users"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to fetch users"})
 			return
 		}
 		defer rows.Close()
 
-		var users []models.UserDetail
+		var users []UserDetail
 
 		for rows.Next() {
-			var user models.UserDetail
+			var user UserDetail
 			if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.FullName); err != nil {
-				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to scan user"})
+				c.JSON(http.StatusInternalServerError, Error{Error: "Failed to scan user"})
 				return
 			}
 
@@ -378,22 +378,22 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 // @Security BearerAuth
 // @Produce json
 // @Param user_id path int true "User ID"
-// @Success 200 {object} models.UserDetail
-// @Failure 404 {object} models.Error
-// @Failure 500 {object} models.Error
+// @Success 200 {object} UserDetail
+// @Failure 404 {object} Error
+// @Failure 500 {object} Error
 // @Router /users/{user_id} [get]
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
 		row := db.QueryRow("SELECT id, email, username, fullName FROM users WHERE id = ?", userId)
 
-		var user models.UserDetail
+		var user UserDetail
 		if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName); err != nil {
 			if err == sql.ErrNoRows {
-				c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
+				c.JSON(http.StatusNotFound, Error{Error: "User not found"})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to scan user"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to scan user"})
 			return
 		}
 
@@ -409,29 +409,29 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param user_id path int true "User ID"
-// @Param user body models.UserDetail true "User data"
-// @Success 200 {object} models.Message
-// @Failure 400 {object} models.Error
-// @Failure 500 {object} models.Error
+// @Param user body UserDetail true "User data"
+// @Success 200 {object} Message
+// @Failure 400 {object} Error
+// @Failure 500 {object} Error
 // @Router /users/{user_id} [put]
 func UpdateUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
-		var updatedUser models.UserDetail
+		var updatedUser UserDetail
 
 		if err := c.ShouldBindJSON(&updatedUser); err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
+			c.JSON(http.StatusBadRequest, Error{Error: "Invalid request body"})
 			return
 		}
 
 		query := "UPDATE users SET email = ?, username = ?, fullName = ? WHERE id = ?"
 		_, err := db.Exec(query, updatedUser.Email, updatedUser.Username, updatedUser.FullName, userId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update user"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to update user"})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "User updated successfully"})
+		c.JSON(http.StatusOK, Message{Message: "User updated successfully"})
 	}
 }
 
@@ -443,11 +443,11 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 // @Accept json
 // @Produce json
 // @Param user_id path int true "User ID"
-// @Param password body models.ChangePasswordRequest true "Password data"
-// @Success 200 {object} models.Message
-// @Failure 400 {object} models.Error
-// @Failure 404 {object} models.Error
-// @Failure 401 {object} models.Error
+// @Param password body ChangePasswordRequest true "Password data"
+// @Success 200 {object} Message
+// @Failure 400 {object} Error
+// @Failure 404 {object} Error
+// @Failure 401 {object} Error
 // @Router /users/{user_id}/change-password [put]
 func ChangePassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -459,7 +459,7 @@ func ChangePassword(db *sql.DB) gin.HandlerFunc {
 		}
 
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
+			c.JSON(http.StatusBadRequest, Error{Error: "Invalid request body"})
 			return
 		}
 
@@ -467,32 +467,32 @@ func ChangePassword(db *sql.DB) gin.HandlerFunc {
 		err := db.QueryRow("SELECT password FROM users WHERE id = ?", userId).Scan(&storedPassword)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
+				c.JSON(http.StatusNotFound, Error{Error: "User not found"})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to fetch user"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to fetch user"})
 			return
 		}
 
 		err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(req.CurrentPassword))
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "Current password is incorrect"})
+			c.JSON(http.StatusUnauthorized, Error{Error: "Current password is incorrect"})
 			return
 		}
 
 		hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to hash new password"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to hash new password"})
 			return
 		}
 
 		_, err = db.Exec("UPDATE users SET password = ? WHERE id = ?", hashedNewPassword, userId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update password"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to update password"})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "Password changed successfully"})
+		c.JSON(http.StatusOK, Message{Message: "Password changed successfully"})
 	}
 }
 
@@ -502,9 +502,9 @@ func ChangePassword(db *sql.DB) gin.HandlerFunc {
 // @Tags users
 // @Security BearerAuth
 // @Param user_id path int true "User ID"
-// @Success 200 {object} models.Message
-// @Failure 404 {object} models.Error
-// @Failure 500 {object} models.Error
+// @Success 200 {object} Message
+// @Failure 404 {object} Error
+// @Failure 500 {object} Error
 // @Router /users/{user_id} [delete]
 func DeleteUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -513,21 +513,21 @@ func DeleteUser(db *sql.DB) gin.HandlerFunc {
 		query := "UPDATE users SET deleted_at = NOW() WHERE id = ?"
 		result, err := db.Exec(query, userId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete user"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to delete user"})
 			return
 		}
 
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to get rows affected"})
+			c.JSON(http.StatusInternalServerError, Error{Error: "Failed to get rows affected"})
 			return
 		}
 
 		if rowsAffected == 0 {
-			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
+			c.JSON(http.StatusNotFound, Error{Error: "User not found"})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "User deleted successfully"})
+		c.JSON(http.StatusOK, Message{Message: "User deleted successfully"})
 	}
 }
