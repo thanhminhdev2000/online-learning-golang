@@ -20,7 +20,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/user/": {
+        "/users/": {
             "get": {
                 "security": [
                     {
@@ -54,7 +54,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/forgot-password": {
+        "/users/forgot-password": {
             "post": {
                 "description": "Send a password reset link to the user's email",
                 "consumes": [
@@ -100,7 +100,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/login": {
+        "/users/login": {
             "post": {
                 "description": "Log in a user using email or username and password",
                 "consumes": [
@@ -146,7 +146,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/logout": {
+        "/users/logout": {
             "post": {
                 "description": "Log out the user by clearing the refresh token",
                 "produces": [
@@ -166,7 +166,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/refresh": {
+        "/users/refresh": {
             "post": {
                 "description": "Refresh the access token using the refresh token",
                 "produces": [
@@ -192,7 +192,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/reset-password": {
+        "/users/reset-password": {
             "post": {
                 "description": "Reset the user's password using a valid token",
                 "consumes": [
@@ -245,7 +245,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/signup": {
+        "/users/signup": {
             "post": {
                 "description": "Register a new user with email, username, and password",
                 "consumes": [
@@ -291,7 +291,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/{user_id}": {
+        "/users/{user_id}": {
             "get": {
                 "security": [
                     {
@@ -434,7 +434,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/{user_id}/password": {
+        "/users/{user_id}/password": {
             "put": {
                 "security": [
                     {
