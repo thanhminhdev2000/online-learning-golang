@@ -93,6 +93,16 @@ definitions:
     required:
     - password
     type: object
+  models.UpdateUserResponse:
+    properties:
+      message:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserDetail'
+    required:
+    - message
+    - user
+    type: object
   models.UserDetail:
     properties:
       avatar:
@@ -379,7 +389,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Message'
+            $ref: '#/definitions/models.UpdateUserResponse'
         "400":
           description: Bad Request
           schema:

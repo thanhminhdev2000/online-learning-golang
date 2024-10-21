@@ -373,7 +373,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/models.UpdateUserResponse"
                         }
                     },
                     "400": {
@@ -633,6 +633,21 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 6
+                }
+            }
+        },
+        "models.UpdateUserResponse": {
+            "type": "object",
+            "required": [
+                "message",
+                "user"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.UserDetail"
                 }
             }
         },

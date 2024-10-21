@@ -31,6 +31,11 @@ type UserDetail struct {
 	DateOfBirth string `json:"dateOfBirth"`
 }
 
+type UpdateUserResponse struct {
+	Message string     `json:"message" validate:"required"`
+	User    UserDetail `json:"user" validate:"required"`
+}
+
 type ForgotPasswordRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }

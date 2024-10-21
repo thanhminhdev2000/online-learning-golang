@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"online-learning-golang/models"
 
@@ -47,10 +46,10 @@ func CreateUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		defaultAvatarURL := "https://res.cloudinary.com/dmiyzfjba/image/upload/v1729515681/avatar-default_wihg94.jpg"
 		query = "INSERT INTO users (email, username, fullName, password, gender, avatar, dateOfBirth) VALUES (?, ?, ?, ?, ?, ?, ?)"
-		_, err = db.Exec(query, newUser.Email, newUser.Username, newUser.FullName, hashedPassword, newUser.Gender, newUser.Avatar, newUser.DateOfBirth)
+		_, err = db.Exec(query, newUser.Email, newUser.Username, newUser.FullName, hashedPassword, newUser.Gender, defaultAvatarURL, newUser.DateOfBirth)
 		if err != nil {
-			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to register user"})
 			return
 		}
@@ -132,7 +131,7 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 // @Produce json
 // @Param user_id path int true "User ID"
 // @Param user body models.UserDetail true "User data"
-// @Success 200 {object} models.Message
+// @Success 200 {object} models.UpdateUserResponse
 // @Failure 400 {object} models.Error
 // @Failure 500 {object} models.Error
 // @Router /users/{user_id} [put]
@@ -153,7 +152,11 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "User updated successfully"})
+		var response models.UpdateUserResponse
+		response.Message = "User updated successfully"
+		response.User = updatedUser
+
+		c.JSON(http.StatusOK, response)
 	}
 }
 
