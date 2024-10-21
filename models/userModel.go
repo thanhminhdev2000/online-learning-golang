@@ -1,6 +1,6 @@
 package models
 
-type SignUpRequest struct {
+type CreateUserRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Username string `json:"username" validate:"required"`
 	FullName string `json:"fullName" validate:"required"`

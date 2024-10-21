@@ -9,13 +9,7 @@ import (
 )
 
 func UserRoutes(router *gin.RouterGroup, db *sql.DB) {
-	router.POST("/signup", controllers.SignUp(db))
-	router.POST("/login", controllers.Login(db))
-	router.POST("/refresh", controllers.RefreshToken())
-	router.POST("/logout", controllers.Logout())
-	router.POST("/forgot-password", controllers.ForgotPassword(db))
-	router.POST("/reset-password", controllers.ResetPassword(db))
-
+	router.POST("/", controllers.CreateUser(db))
 	router.GET("/", middleware.AuthMiddleware(), controllers.GetUsers(db))
 	router.GET("/:user_id", middleware.AuthMiddleware(), controllers.GetUserByID(db))
 	router.PUT("/:user_id", middleware.AuthMiddleware(), controllers.UpdateUser(db))
