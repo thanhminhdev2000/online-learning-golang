@@ -511,14 +511,24 @@ const docTemplate = `{
             "required": [
                 "email",
                 "fullName",
+                "gender",
                 "password",
                 "username"
             ],
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "dateOfBirth": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
                 "fullName": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "password": {
@@ -605,7 +615,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "currentPassword": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 },
                 "newPassword": {
                     "type": "string",
@@ -630,14 +641,24 @@ const docTemplate = `{
             "required": [
                 "email",
                 "fullName",
+                "gender",
                 "id",
                 "username"
             ],
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "dateOfBirth": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
                 "fullName": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "id": {

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"online-learning-golang/models"
 
@@ -46,9 +47,10 @@ func CreateUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		query = "INSERT INTO users (email, username, fullName, password) VALUES (?, ?, ?, ?)"
-		_, err = db.Exec(query, newUser.Email, newUser.Username, newUser.FullName, hashedPassword)
+		query = "INSERT INTO users (email, username, fullName, password, gender, avatar, dateOfBirth) VALUES (?, ?, ?, ?, ?, ?, ?)"
+		_, err = db.Exec(query, newUser.Email, newUser.Username, newUser.FullName, hashedPassword, newUser.Gender, newUser.Avatar, newUser.DateOfBirth)
 		if err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to register user"})
 			return
 		}
@@ -68,7 +70,7 @@ func CreateUser(db *sql.DB) gin.HandlerFunc {
 // @Router /users/ [get]
 func GetUsers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		rows, err := db.Query("SELECT id, email, username, fullName FROM users WHERE deleted_at IS NULL")
+		rows, err := db.Query("SELECT id, email, username, fullName, gender, avatar, dateOfBirth FROM users WHERE deleted_at IS NULL")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to fetch users"})
 			return
@@ -79,7 +81,7 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var user models.UserDetail
-			if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.FullName); err != nil {
+			if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth); err != nil {
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to scan user"})
 				return
 			}
@@ -105,10 +107,10 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
-		row := db.QueryRow("SELECT id, email, username, fullName FROM users WHERE id = ?", userId)
+		row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth FROM users WHERE id = ?", userId)
 
 		var user models.UserDetail
-		if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName); err != nil {
+		if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth); err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
 				return
@@ -144,8 +146,8 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		query := "UPDATE users SET email = ?, username = ?, fullName = ? WHERE id = ?"
-		_, err := db.Exec(query, updatedUser.Email, updatedUser.Username, updatedUser.FullName, userId)
+		query := "UPDATE users SET email = ?, username = ?, fullName = ?, avatar = ? WHERE id = ?"
+		_, err := db.Exec(query, updatedUser.Email, updatedUser.Username, updatedUser.FullName, updatedUser.Avatar, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update user"})
 			return

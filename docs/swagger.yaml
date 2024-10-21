@@ -7,9 +7,15 @@ definitions:
     type: object
   models.CreateUserRequest:
     properties:
+      avatar:
+        type: string
+      dateOfBirth:
+        type: string
       email:
         type: string
       fullName:
+        type: string
+      gender:
         type: string
       password:
         minLength: 6
@@ -19,6 +25,7 @@ definitions:
     required:
     - email
     - fullName
+    - gender
     - password
     - username
     type: object
@@ -69,6 +76,7 @@ definitions:
   models.PasswordUpdateRequest:
     properties:
       currentPassword:
+        minLength: 6
         type: string
       newPassword:
         minLength: 6
@@ -87,9 +95,15 @@ definitions:
     type: object
   models.UserDetail:
     properties:
+      avatar:
+        type: string
+      dateOfBirth:
+        type: string
       email:
         type: string
       fullName:
+        type: string
+      gender:
         type: string
       id:
         type: integer
@@ -98,6 +112,7 @@ definitions:
     required:
     - email
     - fullName
+    - gender
     - id
     - username
     type: object

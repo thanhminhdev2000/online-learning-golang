@@ -51,6 +51,9 @@ func CreateUsersTable(db *sql.DB) error {
 		username VARCHAR(50) NOT NULL UNIQUE,
 		fullName VARCHAR(50) NOT NULL,
 		password VARCHAR(255) NOT NULL,
+		gender ENUM('male', 'female'), 
+		avatar VARCHAR(255),
+		dateOfBirth DATE,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMP NULL DEFAULT NULL

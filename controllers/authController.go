@@ -40,13 +40,13 @@ func Login(db *sql.DB) gin.HandlerFunc {
 		isEmail, _ := regexp.MatchString(`^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$`, loginData.Identifier)
 		var query string
 		if isEmail {
-			query = "SELECT id, email, username, fullName, password FROM users WHERE email = ?"
+			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth FROM users WHERE email = ?"
 		} else {
-			query = "SELECT id, email, username, fullName, password FROM users WHERE username = ?"
+			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth FROM users WHERE username = ?"
 		}
 
 		err := db.QueryRow(query, loginData.Identifier).
-			Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &storedPassword)
+			Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &storedPassword, &user.Gender, &user.Avatar, &user.DateOfBirth)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid email or password"})
