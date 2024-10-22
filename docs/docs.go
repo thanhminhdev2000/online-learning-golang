@@ -289,7 +289,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{user_id}": {
+        "/users/{userId}": {
             "get": {
                 "security": [
                     {
@@ -308,7 +308,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "user_id",
+                        "name": "userId",
                         "in": "path",
                         "required": true
                     }
@@ -355,7 +355,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "user_id",
+                        "name": "userId",
                         "in": "path",
                         "required": true
                     },
@@ -405,7 +405,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "user_id",
+                        "name": "userId",
                         "in": "path",
                         "required": true
                     }
@@ -432,7 +432,63 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{user_id}/password": {
+        "/users/{userId}/avatar": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the avatar for a specific user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user avatar",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "User Avatar",
+                        "name": "avatar",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/password": {
             "put": {
                 "security": [
                     {
@@ -454,7 +510,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "user_id",
+                        "name": "userId",
                         "in": "path",
                         "required": true
                     },
@@ -509,6 +565,8 @@ const docTemplate = `{
         "models.CreateUserRequest": {
             "type": "object",
             "required": [
+                "avatar",
+                "dateOfBirth",
                 "email",
                 "fullName",
                 "gender",
@@ -654,6 +712,8 @@ const docTemplate = `{
         "models.UserDetail": {
             "type": "object",
             "required": [
+                "avatar",
+                "dateOfBirth",
                 "email",
                 "fullName",
                 "gender",

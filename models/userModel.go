@@ -6,8 +6,8 @@ type CreateUserRequest struct {
 	FullName    string `json:"fullName" validate:"required"`
 	Password    string `json:"password" validate:"required,min=6"`
 	Gender      string `json:"gender" validate:"required"`
-	Avatar      string `json:"avatar"`
-	DateOfBirth string `json:"dateOfBirth"`
+	Avatar      string `json:"avatar" validate:"required"`
+	DateOfBirth string `json:"dateOfBirth" validate:"required"`
 }
 
 type LoginRequest struct {
@@ -27,8 +27,8 @@ type UserDetail struct {
 	Username    string `json:"username" validate:"required"`
 	FullName    string `json:"fullName" validate:"required"`
 	Gender      string `json:"gender" validate:"required"`
-	Avatar      string `json:"avatar"`
-	DateOfBirth string `json:"dateOfBirth"`
+	Avatar      string `json:"avatar" validate:"required"`
+	DateOfBirth string `json:"dateOfBirth" validate:"required"`
 }
 
 type UpdateUserResponse struct {

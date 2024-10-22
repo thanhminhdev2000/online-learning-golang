@@ -2,7 +2,10 @@ package controllers
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
+	"online-learning-golang/cloudinary"
 	"online-learning-golang/models"
 
 	"github.com/gin-gonic/gin"
@@ -22,15 +25,15 @@ import (
 // @Router /users/ [post]
 func CreateUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var newUser models.CreateUserRequest
-		if err := c.ShouldBindJSON(&newUser); err != nil {
+		var user models.CreateUserRequest
+		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
 			return
 		}
 
 		var exists bool
 		query := "SELECT EXISTS(SELECT 1 FROM users WHERE email = ? OR username = ?)"
-		err := db.QueryRow(query, newUser.Email, newUser.Username).Scan(&exists)
+		err := db.QueryRow(query, user.Email, user.Username).Scan(&exists)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to check for existing user"})
 			return
@@ -40,15 +43,14 @@ func CreateUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to hash password"})
 			return
 		}
 
-		defaultAvatarURL := "https://res.cloudinary.com/dmiyzfjba/image/upload/v1729515681/avatar-default_wihg94.jpg"
 		query = "INSERT INTO users (email, username, fullName, password, gender, avatar, dateOfBirth) VALUES (?, ?, ?, ?, ?, ?, ?)"
-		_, err = db.Exec(query, newUser.Email, newUser.Username, newUser.FullName, hashedPassword, newUser.Gender, defaultAvatarURL, newUser.DateOfBirth)
+		_, err = db.Exec(query, user.Email, user.Username, user.FullName, hashedPassword, user.Gender, user.Avatar, user.DateOfBirth)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to register user"})
 			return
@@ -92,32 +94,31 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+func GetUserDetail(db *sql.DB, userId string) models.UserDetail {
+	row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth FROM users WHERE id = ?", userId)
+
+	var user models.UserDetail
+	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth); err != nil {
+		log.Fatal("Failed to fetch user")
+	}
+	return user
+}
+
 // GetUserByID godoc
 // @Summary Get user by ID
 // @Description Retrieve user information by user ID
 // @Tags User
 // @Security BearerAuth
 // @Produce json
-// @Param user_id path int true "User ID"
+// @Param userId path int true "User ID"
 // @Success 200 {object} models.UserDetail
 // @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
-// @Router /users/{user_id} [get]
+// @Router /users/{userId} [get]
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId := c.Param("user_id")
-		row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth FROM users WHERE id = ?", userId)
-
-		var user models.UserDetail
-		if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth); err != nil {
-			if err == sql.ErrNoRows {
-				c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
-				return
-			}
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to scan user"})
-			return
-		}
-
+		userId := c.Param("userId")
+		user := GetUserDetail(db, userId)
 		c.JSON(http.StatusOK, user)
 	}
 }
@@ -129,34 +130,31 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param user_id path int true "User ID"
+// @Param userId path int true "User ID"
 // @Param user body models.UserDetail true "User data"
 // @Success 200 {object} models.UpdateUserResponse
 // @Failure 400 {object} models.Error
 // @Failure 500 {object} models.Error
-// @Router /users/{user_id} [put]
+// @Router /users/{userId} [put]
 func UpdateUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId := c.Param("user_id")
-		var updatedUser models.UserDetail
+		userId := c.Param("userId")
+		var updateUser models.UserDetail
 
-		if err := c.ShouldBindJSON(&updatedUser); err != nil {
+		if err := c.ShouldBindJSON(&updateUser); err != nil {
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
 			return
 		}
 
 		query := "UPDATE users SET email = ?, username = ?, fullName = ?, avatar = ? WHERE id = ?"
-		_, err := db.Exec(query, updatedUser.Email, updatedUser.Username, updatedUser.FullName, updatedUser.Avatar, userId)
+		_, err := db.Exec(query, updateUser.Email, updateUser.Username, updateUser.FullName, updateUser.Avatar, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update user"})
 			return
 		}
 
-		var response models.UpdateUserResponse
-		response.Message = "User updated successfully"
-		response.User = updatedUser
-
-		c.JSON(http.StatusOK, response)
+		user := GetUserDetail(db, userId)
+		c.JSON(http.StatusOK, models.UpdateUserResponse{Message: "User updated successfully", User: user})
 	}
 }
 
@@ -167,16 +165,16 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param user_id path int true "User ID"
+// @Param userId path int true "User ID"
 // @Param password body models.PasswordUpdateRequest true "Password data"
 // @Success 200 {object} models.Message
 // @Failure 400 {object} models.Error
 // @Failure 404 {object} models.Error
 // @Failure 401 {object} models.Error
-// @Router /users/{user_id}/password [put]
-func PasswordUpdate(db *sql.DB) gin.HandlerFunc {
+// @Router /users/{userId}/password [put]
+func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId := c.Param("user_id")
+		userId := c.Param("userId")
 
 		var req struct {
 			CurrentPassword string `json:"currentPassword"`
@@ -221,19 +219,72 @@ func PasswordUpdate(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+// UpdateUserAvatar godoc
+// @Summary Update user avatar
+// @Description Update the avatar for a specific user
+// @Tags User
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param userId path int true "User ID"
+// @Param avatar formData file true "User Avatar"
+// @Success 200 {object} models.UpdateUserResponse
+// @Failure 400 {object} models.Error
+// @Failure 500 {object} models.Error
+// @Router /users/{userId}/avatar [put]
+func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId := c.Param("userId")
+
+		file, err := c.FormFile("avatar")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, models.Error{Error: "No file provided"})
+			return
+		}
+
+		fileContent, err := file.Open()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to open avatar file"})
+			return
+		}
+		defer fileContent.Close()
+		fmt.Println("fileContent", fileContent)
+
+		cld, err := cloudinary.SetupCloudinary()
+		if err != nil {
+			log.Fatalf("Error setting up Cloudinary: %v", err)
+		}
+
+		avatarURL, err := cloudinary.UploadAvatar(cld, fileContent)
+		if err != nil {
+			log.Fatalf("Error uploading avatar: %v", err)
+		}
+
+		query := "UPDATE users SET avatar = ? WHERE id = ?"
+		_, err = db.Exec(query, avatarURL, userId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update avatar in database"})
+			return
+		}
+
+		user := GetUserDetail(db, userId)
+		c.JSON(http.StatusOK, models.UpdateUserResponse{Message: "Avatar updated successfully", User: user})
+	}
+}
+
 // DeleteUser godoc
 // @Summary Delete user
 // @Description Delete a user by user ID
 // @Tags User
 // @Security BearerAuth
-// @Param user_id path int true "User ID"
+// @Param userId path int true "User ID"
 // @Success 200 {object} models.Message
 // @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
-// @Router /users/{user_id} [delete]
+// @Router /users/{userId} [delete]
 func DeleteUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId := c.Param("user_id")
+		userId := c.Param("userId")
 
 		query := "UPDATE users SET deleted_at = NOW() WHERE id = ?"
 		result, err := db.Exec(query, userId)

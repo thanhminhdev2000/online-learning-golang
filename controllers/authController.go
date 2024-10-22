@@ -196,7 +196,7 @@ func ForgotPassword(db *sql.DB) gin.HandlerFunc {
 		}
 
 		expiry := time.Now().Add(1 * time.Hour)
-		_, err = db.Exec("INSERT INTO reset_pw_tokens (user_id, token, expiry) VALUES (?, ?, ?)", user.ID, token, expiry)
+		_, err = db.Exec("INSERT INTO reset_pw_tokens (userId, token, expiry) VALUES (?, ?, ?)", user.ID, token, expiry)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to store reset token"})
 			return
@@ -240,7 +240,7 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 
 		var userID int
 		var tokenExpiryRaw []uint8
-		query := "SELECT user_id, expiry FROM reset_pw_tokens WHERE token = ?"
+		query := "SELECT userId, expiry FROM reset_pw_tokens WHERE token = ?"
 
 		err := db.QueryRow(query, token).Scan(&userID, &tokenExpiryRaw)
 		if err != nil {

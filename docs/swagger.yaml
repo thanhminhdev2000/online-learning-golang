@@ -23,6 +23,8 @@ definitions:
       username:
         type: string
     required:
+    - avatar
+    - dateOfBirth
     - email
     - fullName
     - gender
@@ -120,6 +122,8 @@ definitions:
       username:
         type: string
     required:
+    - avatar
+    - dateOfBirth
     - email
     - fullName
     - gender
@@ -312,13 +316,13 @@ paths:
       summary: Register a new user
       tags:
       - User
-  /users/{user_id}:
+  /users/{userId}:
     delete:
       description: Delete a user by user ID
       parameters:
       - description: User ID
         in: path
-        name: user_id
+        name: userId
         required: true
         type: integer
       responses:
@@ -344,7 +348,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: user_id
+        name: userId
         required: true
         type: integer
       produces:
@@ -374,7 +378,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: user_id
+        name: userId
         required: true
         type: integer
       - description: User data
@@ -403,7 +407,43 @@ paths:
       summary: Update user information
       tags:
       - User
-  /users/{user_id}/password:
+  /users/{userId}/avatar:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update the avatar for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: User Avatar
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UpdateUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Update user avatar
+      tags:
+      - User
+  /users/{userId}/password:
     put:
       consumes:
       - application/json
@@ -411,7 +451,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: user_id
+        name: userId
         required: true
         type: integer
       - description: Password data
