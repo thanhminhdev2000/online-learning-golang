@@ -19,10 +19,10 @@ func GenerateResetToken() (string, error) {
 }
 
 func SendResetEmail(userEmail, token string) error {
-	resetLink := fmt.Sprintf("%s/reset-password?token=%s", os.Getenv("CLIENT_URL"), token)
+	resetLink := fmt.Sprintf("%s/reset-password/%s", os.Getenv("CLIENT_URL"), token)
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", "Online Learning Management")
+	m.SetHeader("From", os.Getenv("SMTP_EMAIL"))
 	m.SetHeader("To", userEmail)
 	m.SetHeader("Subject", "Password Reset")
 	m.SetBody("text/html", fmt.Sprintf("Click <a href='%s'>here</a> to reset your password.", resetLink))
