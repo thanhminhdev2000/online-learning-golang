@@ -30,14 +30,14 @@ func ConnectMySQL() (*sql.DB, error) {
 
 	// DropUsersTable(db)
 	// DropPasswordResetTokensTable(db)
-	err = CreateUsersTable(db)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create users table: %w", err)
-	}
-	err = CreatePasswordResetTokensTable(db)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create reset_pw_tokens table: %w", err)
-	}
+	// err = CreateUsersTable(db)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to create users table: %w", err)
+	// }
+	// err = CreatePasswordResetTokensTable(db)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to create reset_pw_tokens table: %w", err)
+	// }
 
 	return db, nil
 
@@ -51,6 +51,9 @@ func CreateUsersTable(db *sql.DB) error {
 		username VARCHAR(50) NOT NULL UNIQUE,
 		fullName VARCHAR(50) NOT NULL,
 		password VARCHAR(255) NOT NULL,
+		gender ENUM('male', 'female'), 
+		avatar VARCHAR(255),
+		dateOfBirth DATE,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMP NULL DEFAULT NULL
@@ -69,10 +72,10 @@ func CreatePasswordResetTokensTable(db *sql.DB) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS reset_pw_tokens (
 		token VARCHAR(64) PRIMARY KEY,
-		user_id INT NOT NULL,
+		userId INT NOT NULL,
 		expiry TIMESTAMP NOT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
 	);`
 
 	_, err := db.Exec(query)

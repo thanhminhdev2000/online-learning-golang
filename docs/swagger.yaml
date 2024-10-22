@@ -5,6 +5,32 @@ definitions:
       accessToken:
         type: string
     type: object
+  models.CreateUserRequest:
+    properties:
+      avatar:
+        type: string
+      dateOfBirth:
+        type: string
+      email:
+        type: string
+      fullName:
+        type: string
+      gender:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - avatar
+    - dateOfBirth
+    - email
+    - fullName
+    - gender
+    - password
+    - username
+    type: object
   models.Error:
     properties:
       error:
@@ -52,6 +78,7 @@ definitions:
   models.PasswordUpdateRequest:
     properties:
       currentPassword:
+        minLength: 6
         type: string
       newPassword:
         minLength: 6
@@ -68,36 +95,38 @@ definitions:
     required:
     - password
     type: object
-  models.SignUpRequest:
+  models.UpdateUserResponse:
     properties:
-      email:
+      message:
         type: string
-      fullName:
-        type: string
-      password:
-        minLength: 6
-        type: string
-      username:
-        type: string
+      user:
+        $ref: '#/definitions/models.UserDetail'
     required:
-    - email
-    - fullName
-    - password
-    - username
+    - message
+    - user
     type: object
   models.UserDetail:
     properties:
+      avatar:
+        type: string
+      dateOfBirth:
+        type: string
       email:
         type: string
       fullName:
+        type: string
+      gender:
         type: string
       id:
         type: integer
       username:
         type: string
     required:
+    - avatar
+    - dateOfBirth
     - email
     - fullName
+    - gender
     - id
     - username
     type: object
@@ -112,160 +141,7 @@ info:
   title: Online Learning API
   version: "1.0"
 paths:
-  /users/:
-    get:
-      description: Retrieve a list of all users
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.UserDetail'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.Error'
-      security:
-      - BearerAuth: []
-      summary: Get all users
-      tags:
-      - users
-  /users/{user_id}:
-    delete:
-      description: Delete a user by user ID
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Message'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/models.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.Error'
-      security:
-      - BearerAuth: []
-      summary: Delete user
-      tags:
-      - users
-    get:
-      description: Retrieve user information by user ID
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.UserDetail'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/models.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.Error'
-      security:
-      - BearerAuth: []
-      summary: Get user by ID
-      tags:
-      - users
-    put:
-      consumes:
-      - application/json
-      description: Update user information by user ID
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      - description: User data
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.UserDetail'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Message'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.Error'
-      security:
-      - BearerAuth: []
-      summary: Update user information
-      tags:
-      - users
-  /users/{user_id}/password:
-    put:
-      consumes:
-      - application/json
-      description: Change the user's password
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      - description: Password data
-        in: body
-        name: password
-        required: true
-        schema:
-          $ref: '#/definitions/models.PasswordUpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Message'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.Error'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/models.Error'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/models.Error'
-      security:
-      - BearerAuth: []
-      summary: Change user password
-      tags:
-      - users
-  /users/forgot-password:
+  /auth/forgot-password:
     post:
       consumes:
       - application/json
@@ -294,12 +170,12 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Request password reset
       tags:
-      - users
-  /users/login:
+      - Authentication
+  /auth/login:
     post:
       consumes:
       - application/json
-      description: Log in a user using email or username and password
+      description: Log in using email or username and password
       parameters:
       - description: Login credentials
         in: body
@@ -322,12 +198,12 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Log in an existing user
+      summary: Log in
       tags:
-      - users
-  /users/logout:
+      - Authentication
+  /auth/logout:
     post:
-      description: Log out the user by clearing the refresh token
+      description: Log out by clearing the refresh token
       produces:
       - application/json
       responses:
@@ -335,10 +211,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Message'
-      summary: Log out the user
+      summary: Log out
       tags:
-      - users
-  /users/refresh:
+      - Authentication
+  /auth/refresh-token:
     post:
       description: Refresh the access token using the refresh token
       produces:
@@ -354,8 +230,8 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Refresh access token
       tags:
-      - users
-  /users/reset-password:
+      - Authentication
+  /auth/reset-password:
     post:
       consumes:
       - application/json
@@ -389,8 +265,28 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Reset user password
       tags:
-      - users
-  /users/signup:
+      - Authentication
+  /users/:
+    get:
+      description: Retrieve a list of all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UserDetail'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - User
     post:
       consumes:
       - application/json
@@ -401,7 +297,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.SignUpRequest'
+          $ref: '#/definitions/models.CreateUserRequest'
       produces:
       - application/json
       responses:
@@ -419,7 +315,175 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Register a new user
       tags:
-      - users
+      - User
+  /users/{userId}:
+    delete:
+      description: Delete a user by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - User
+    get:
+      description: Retrieve user information by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserDetail'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Update user information by user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserDetail'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UpdateUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Update user information
+      tags:
+      - User
+  /users/{userId}/avatar:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update the avatar for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: User Avatar
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UpdateUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Update user avatar
+      tags:
+      - User
+  /users/{userId}/password:
+    put:
+      consumes:
+      - application/json
+      description: Change the user's password
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: Password data
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/models.PasswordUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Change user password
+      tags:
+      - User
 securityDefinitions:
   BearerAuth:
     in: header

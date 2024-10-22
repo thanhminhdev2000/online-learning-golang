@@ -1,10 +1,13 @@
 package models
 
-type SignUpRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Username string `json:"username" validate:"required"`
-	FullName string `json:"fullName" validate:"required"`
-	Password string `json:"password" validate:"required,min=6"`
+type CreateUserRequest struct {
+	Email       string `json:"email" validate:"required,email"`
+	Username    string `json:"username" validate:"required"`
+	FullName    string `json:"fullName" validate:"required"`
+	Password    string `json:"password" validate:"required,min=6"`
+	Gender      string `json:"gender" validate:"required"`
+	Avatar      string `json:"avatar" validate:"required"`
+	DateOfBirth string `json:"dateOfBirth" validate:"required"`
 }
 
 type LoginRequest struct {
@@ -19,10 +22,18 @@ type LoginResponse struct {
 }
 
 type UserDetail struct {
-	ID       int    `json:"id" validate:"required"`
-	Email    string `json:"email" validate:"required"`
-	Username string `json:"username" validate:"required"`
-	FullName string `json:"fullName" validate:"required"`
+	ID          int    `json:"id" validate:"required"`
+	Email       string `json:"email" validate:"required"`
+	Username    string `json:"username" validate:"required"`
+	FullName    string `json:"fullName" validate:"required"`
+	Gender      string `json:"gender" validate:"required"`
+	Avatar      string `json:"avatar" validate:"required"`
+	DateOfBirth string `json:"dateOfBirth" validate:"required"`
+}
+
+type UpdateUserResponse struct {
+	Message string     `json:"message" validate:"required"`
+	User    UserDetail `json:"user" validate:"required"`
 }
 
 type ForgotPasswordRequest struct {
@@ -38,6 +49,6 @@ type AccessTokenResponse struct {
 }
 
 type PasswordUpdateRequest struct {
-	CurrentPassword string `json:"currentPassword" validate:"required"`
+	CurrentPassword string `json:"currentPassword" validate:"required,min=6"`
 	NewPassword     string `json:"newPassword" validate:"required,min=6"`
 }

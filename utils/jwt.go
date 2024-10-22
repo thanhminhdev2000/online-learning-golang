@@ -26,7 +26,7 @@ func CreateToken(userID int, expirationTime time.Duration) (string, error) {
 }
 
 func CreateAccessToken(userID int) (string, error) {
-	return CreateToken(userID, 15*time.Minute)
+	return CreateToken(userID, 60*time.Minute)
 }
 
 func CreateRefreshToken(userID int) (string, error) {

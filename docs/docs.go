@@ -20,41 +20,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/users/": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieve a list of all users",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Get all users",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.UserDetail"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/users/forgot-password": {
+        "/auth/forgot-password": {
             "post": {
                 "description": "Send a password reset link to the user's email",
                 "consumes": [
@@ -64,7 +30,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Authentication"
                 ],
                 "summary": "Request password reset",
                 "parameters": [
@@ -100,9 +66,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/login": {
+        "/auth/login": {
             "post": {
-                "description": "Log in a user using email or username and password",
+                "description": "Log in using email or username and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -110,9 +76,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Authentication"
                 ],
-                "summary": "Log in an existing user",
+                "summary": "Log in",
                 "parameters": [
                     {
                         "description": "Login credentials",
@@ -146,16 +112,16 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/logout": {
+        "/auth/logout": {
             "post": {
-                "description": "Log out the user by clearing the refresh token",
+                "description": "Log out by clearing the refresh token",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Authentication"
                 ],
-                "summary": "Log out the user",
+                "summary": "Log out",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -166,14 +132,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/refresh": {
+        "/auth/refresh-token": {
             "post": {
                 "description": "Refresh the access token using the refresh token",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Authentication"
                 ],
                 "summary": "Refresh access token",
                 "responses": {
@@ -192,7 +158,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/reset-password": {
+        "/auth/reset-password": {
             "post": {
                 "description": "Reset the user's password using a valid token",
                 "consumes": [
@@ -202,7 +168,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Authentication"
                 ],
                 "summary": "Reset user password",
                 "parameters": [
@@ -245,7 +211,39 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/signup": {
+        "/users/": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all users",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get all users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.UserDetail"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Register a new user with email, username, and password",
                 "consumes": [
@@ -255,7 +253,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "User"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
@@ -265,7 +263,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.SignUpRequest"
+                            "$ref": "#/definitions/models.CreateUserRequest"
                         }
                     }
                 ],
@@ -291,7 +289,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{user_id}": {
+        "/users/{userId}": {
             "get": {
                 "security": [
                     {
@@ -303,14 +301,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "User"
                 ],
                 "summary": "Get user by ID",
                 "parameters": [
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "user_id",
+                        "name": "userId",
                         "in": "path",
                         "required": true
                     }
@@ -350,14 +348,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "User"
                 ],
                 "summary": "Update user information",
                 "parameters": [
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "user_id",
+                        "name": "userId",
                         "in": "path",
                         "required": true
                     },
@@ -375,7 +373,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/models.UpdateUserResponse"
                         }
                     },
                     "400": {
@@ -400,14 +398,14 @@ const docTemplate = `{
                 ],
                 "description": "Delete a user by user ID",
                 "tags": [
-                    "users"
+                    "User"
                 ],
                 "summary": "Delete user",
                 "parameters": [
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "user_id",
+                        "name": "userId",
                         "in": "path",
                         "required": true
                     }
@@ -434,7 +432,63 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{user_id}/password": {
+        "/users/{userId}/avatar": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the avatar for a specific user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user avatar",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "User Avatar",
+                        "name": "avatar",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/password": {
             "put": {
                 "security": [
                     {
@@ -449,14 +503,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "User"
                 ],
                 "summary": "Change user password",
                 "parameters": [
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "user_id",
+                        "name": "userId",
                         "in": "path",
                         "required": true
                     },
@@ -504,6 +558,42 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "accessToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "avatar",
+                "dateOfBirth",
+                "email",
+                "fullName",
+                "gender",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "dateOfBirth": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -583,7 +673,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "currentPassword": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 },
                 "newPassword": {
                     "type": "string",
@@ -603,43 +694,46 @@ const docTemplate = `{
                 }
             }
         },
-        "models.SignUpRequest": {
+        "models.UpdateUserResponse": {
             "type": "object",
             "required": [
-                "email",
-                "fullName",
-                "password",
-                "username"
+                "message",
+                "user"
             ],
             "properties": {
-                "email": {
+                "message": {
                     "type": "string"
                 },
-                "fullName": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 6
-                },
-                "username": {
-                    "type": "string"
+                "user": {
+                    "$ref": "#/definitions/models.UserDetail"
                 }
             }
         },
         "models.UserDetail": {
             "type": "object",
             "required": [
+                "avatar",
+                "dateOfBirth",
                 "email",
                 "fullName",
+                "gender",
                 "id",
                 "username"
             ],
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "dateOfBirth": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
                 "fullName": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "id": {
