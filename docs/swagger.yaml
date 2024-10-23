@@ -4,6 +4,11 @@ definitions:
     properties:
       accessToken:
         type: string
+      expiresIn:
+        type: integer
+    required:
+    - accessToken
+    - expiresIn
     type: object
   models.CreateUserRequest:
     properties:
@@ -16,10 +21,12 @@ definitions:
       fullName:
         type: string
       gender:
-        type: string
+        $ref: '#/definitions/models.UserGender'
       password:
         minLength: 6
         type: string
+      role:
+        $ref: '#/definitions/models.UserRole'
       username:
         type: string
     required:
@@ -59,12 +66,15 @@ definitions:
     properties:
       accessToken:
         type: string
+      expiresIn:
+        type: integer
       message:
         type: string
       user:
         $ref: '#/definitions/models.UserDetail'
     required:
     - accessToken
+    - expiresIn
     - message
     - user
     type: object
@@ -74,6 +84,19 @@ definitions:
         type: string
     required:
     - message
+    type: object
+  models.PagingInfo:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      totalCount:
+        type: integer
+    required:
+    - limit
+    - page
+    - totalCount
     type: object
   models.PasswordUpdateRequest:
     properties:
@@ -116,9 +139,11 @@ definitions:
       fullName:
         type: string
       gender:
-        type: string
+        $ref: '#/definitions/models.UserGender'
       id:
         type: integer
+      role:
+        $ref: '#/definitions/models.UserRole'
       username:
         type: string
     required:
@@ -128,8 +153,37 @@ definitions:
     - fullName
     - gender
     - id
+    - role
     - username
     type: object
+  models.UserGender:
+    enum:
+    - female
+    - male
+    type: string
+    x-enum-varnames:
+    - GenderFemale
+    - GenderMale
+  models.UserResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.UserDetail'
+        type: array
+      paging:
+        $ref: '#/definitions/models.PagingInfo'
+    required:
+    - data
+    - paging
+    type: object
+  models.UserRole:
+    enum:
+    - user
+    - admin
+    type: string
+    x-enum-varnames:
+    - RoleUser
+    - RoleAdmin
 host: localhost:8080
 info:
   contact:
@@ -268,16 +322,44 @@ paths:
       - Authentication
   /users/:
     get:
-      description: Retrieve a list of all users
+      description: Retrieve a list of all users, with optional filters for email,
+        username, full name, date of birth, role, and pagination.
+      parameters:
+      - description: Filter by email
+        in: query
+        name: email
+        type: string
+      - description: Filter by username
+        in: query
+        name: username
+        type: string
+      - description: Filter by full name
+        in: query
+        name: fullName
+        type: string
+      - description: Filter by date of birth
+        in: query
+        name: dateOfBirth
+        type: string
+      - description: Filter by role
+        in: query
+        name: role
+        type: string
+      - description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - description: Limit number of items per page (max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.UserDetail'
-            type: array
+            $ref: '#/definitions/models.UserResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -482,6 +564,36 @@ paths:
       security:
       - BearerAuth: []
       summary: Change user password
+      tags:
+      - User
+  /users/admin:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email, username, and password
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Register a new user
       tags:
       - User
 securityDefinitions:

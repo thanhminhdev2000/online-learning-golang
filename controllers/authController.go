@@ -2,17 +2,13 @@ package controllers
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"online-learning-golang/models"
 	"online-learning-golang/utils"
-	"os"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -40,13 +36,13 @@ func Login(db *sql.DB) gin.HandlerFunc {
 		isEmail, _ := regexp.MatchString(`^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$`, loginData.Identifier)
 		var query string
 		if isEmail {
-			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth FROM users WHERE email = ?"
+			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth, role FROM users WHERE email = ?"
 		} else {
-			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth FROM users WHERE username = ?"
+			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth, role FROM users WHERE username = ?"
 		}
 
 		err := db.QueryRow(query, loginData.Identifier).
-			Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &storedPassword, &user.Gender, &user.Avatar, &user.DateOfBirth)
+			Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &storedPassword, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid email or password"})
@@ -62,13 +58,13 @@ func Login(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		accessToken, err := utils.CreateAccessToken(user.ID)
+		accessToken, expiresIn, err := utils.CreateAccessToken(user.ID, string(user.Role))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate access token"})
 			return
 		}
 
-		refreshToken, err := utils.CreateRefreshToken(user.ID)
+		refreshToken, _, err := utils.CreateRefreshToken(user.ID, string(user.Role))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate refresh token"})
 			return
@@ -89,6 +85,7 @@ func Login(db *sql.DB) gin.HandlerFunc {
 			Message:     "Login successful",
 			User:        user,
 			AccessToken: accessToken,
+			ExpiresIn:   expiresIn,
 		}
 
 		c.JSON(http.StatusOK, response)
@@ -105,35 +102,20 @@ func Login(db *sql.DB) gin.HandlerFunc {
 // @Router /auth/refresh-token [post]
 func RefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var jwtKey = []byte(os.Getenv("JWT_KEY"))
 		refreshToken, err := c.Cookie("refreshToken")
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "No refresh token found in cookies"})
+			c.JSON(http.StatusUnauthorized, models.Error{Error: "No refresh token found"})
 			return
 		}
 
-		token, err := jwt.ParseWithClaims(refreshToken, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return jwtKey, nil
-		})
-
-		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid refresh token"})
-			return
-		}
-
-		claims, ok := token.Claims.(*jwt.RegisteredClaims)
-		if !ok || claims.ExpiresAt.Time.Before(time.Now()) {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "Expired or invalid refresh token"})
-			return
-		}
-
-		userID, err := strconv.Atoi(claims.Subject)
+		userId, role, err := utils.ValidToken(refreshToken)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Invalid userID"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
 			return
 		}
 
-		accessToken, err := utils.CreateAccessToken(userID)
+		accessToken, expiresIn, err := utils.CreateAccessToken(userId, role)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate access token"})
 			return
@@ -141,6 +123,7 @@ func RefreshToken() gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, models.AccessTokenResponse{
 			AccessToken: accessToken,
+			ExpiresIn:   expiresIn,
 		})
 	}
 }
@@ -256,7 +239,6 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 		tokenExpiryString := string(tokenExpiryRaw)
 		tokenExpiry, err := time.Parse("2006-01-02 15:04:05", tokenExpiryString)
 		if err != nil {
-			fmt.Printf("Error parsing expiry time: %v\n", err)
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to parse token expiry time"})
 			return
 		}

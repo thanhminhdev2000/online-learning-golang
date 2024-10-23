@@ -218,7 +218,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve a list of all users",
+                "description": "Retrieve a list of all users, with optional filters for email, username, full name, date of birth, role, and pagination.",
                 "produces": [
                     "application/json"
                 ],
@@ -226,14 +226,55 @@ const docTemplate = `{
                     "User"
                 ],
                 "summary": "Get all users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by email",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by username",
+                        "name": "username",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by full name",
+                        "name": "fullName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by date of birth",
+                        "name": "dateOfBirth",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by role",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit number of items per page (max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.UserDetail"
-                            }
+                            "$ref": "#/definitions/models.UserResponse"
                         }
                     },
                     "500": {
@@ -244,6 +285,52 @@ const docTemplate = `{
                     }
                 }
             },
+            "post": {
+                "description": "Register a new user with email, username, and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/admin": {
             "post": {
                 "description": "Register a new user with email, username, and password",
                 "consumes": [
@@ -556,9 +643,16 @@ const docTemplate = `{
     "definitions": {
         "models.AccessTokenResponse": {
             "type": "object",
+            "required": [
+                "accessToken",
+                "expiresIn"
+            ],
             "properties": {
                 "accessToken": {
                     "type": "string"
+                },
+                "expiresIn": {
+                    "type": "integer"
                 }
             }
         },
@@ -587,11 +681,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gender": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.UserGender"
                 },
                 "password": {
                     "type": "string",
                     "minLength": 6
+                },
+                "role": {
+                    "$ref": "#/definitions/models.UserRole"
                 },
                 "username": {
                     "type": "string"
@@ -639,12 +736,16 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "accessToken",
+                "expiresIn",
                 "message",
                 "user"
             ],
             "properties": {
                 "accessToken": {
                     "type": "string"
+                },
+                "expiresIn": {
+                    "type": "integer"
                 },
                 "message": {
                     "type": "string"
@@ -662,6 +763,25 @@ const docTemplate = `{
             "properties": {
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "models.PagingInfo": {
+            "type": "object",
+            "required": [
+                "limit",
+                "page",
+                "totalCount"
+            ],
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "totalCount": {
+                    "type": "integer"
                 }
             }
         },
@@ -718,6 +838,7 @@ const docTemplate = `{
                 "fullName",
                 "gender",
                 "id",
+                "role",
                 "username"
             ],
             "properties": {
@@ -734,15 +855,58 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gender": {
-                    "type": "string"
+                    "$ref": "#/definitions/models.UserGender"
                 },
                 "id": {
                     "type": "integer"
+                },
+                "role": {
+                    "$ref": "#/definitions/models.UserRole"
                 },
                 "username": {
                     "type": "string"
                 }
             }
+        },
+        "models.UserGender": {
+            "type": "string",
+            "enum": [
+                "female",
+                "male"
+            ],
+            "x-enum-varnames": [
+                "GenderFemale",
+                "GenderMale"
+            ]
+        },
+        "models.UserResponse": {
+            "type": "object",
+            "required": [
+                "data",
+                "paging"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserDetail"
+                    }
+                },
+                "paging": {
+                    "$ref": "#/definitions/models.PagingInfo"
+                }
+            }
+        },
+        "models.UserRole": {
+            "type": "string",
+            "enum": [
+                "user",
+                "admin"
+            ],
+            "x-enum-varnames": [
+                "RoleUser",
+                "RoleAdmin"
+            ]
         }
     },
     "securityDefinitions": {
