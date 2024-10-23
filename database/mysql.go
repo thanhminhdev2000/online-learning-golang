@@ -28,10 +28,11 @@ func ConnectMySQL() (*sql.DB, error) {
 
 	fmt.Println("Successfully connected to MySQL!")
 
-	// DropPasswordResetTokensTable(db)
+	// DropResetPasswordTokensTable(db)
 	// DropUsersTable(db)
+	// DropContactsTable(db)
 	// CreateUsersTable(db)
-	// CreatePasswordResetTokensTable(db)
+	// CreateResetPasswordTokensTable(db)
 	// InsertTestAccounts(db)
 
 	return db, nil
@@ -96,7 +97,7 @@ func InsertTestAccounts(db *sql.DB) error {
 	return nil
 }
 
-func CreatePasswordResetTokensTable(db *sql.DB) error {
+func CreateResetPasswordTokensTable(db *sql.DB) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS reset_pw_tokens (
 		token VARCHAR(64) PRIMARY KEY,
@@ -125,7 +126,7 @@ func DropUsersTable(db *sql.DB) error {
 	return nil
 }
 
-func DropPasswordResetTokensTable(db *sql.DB) error {
+func DropResetPasswordTokensTable(db *sql.DB) error {
 	query := "DROP TABLE IF EXISTS reset_pw_tokens;"
 
 	_, err := db.Exec(query)

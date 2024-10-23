@@ -10,6 +10,22 @@ definitions:
     - accessToken
     - expiresIn
     type: object
+  models.Contact:
+    properties:
+      content:
+        type: string
+      email:
+        type: string
+      fullName:
+        type: string
+      title:
+        type: string
+    required:
+    - content
+    - email
+    - fullName
+    - title
+    type: object
   models.CreateUserRequest:
     properties:
       avatar:
@@ -320,6 +336,30 @@ paths:
       summary: Reset user password
       tags:
       - Authentication
+  /contact:
+    post:
+      description: Send email contact
+      parameters:
+      - description: Send email
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.Contact'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Send email contact
+      tags:
+      - Contact
   /users/:
     get:
       description: Retrieve a list of all users, with optional filters for email,

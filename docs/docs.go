@@ -211,6 +211,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/contact": {
+            "post": {
+                "description": "Send email contact",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contact"
+                ],
+                "summary": "Send email contact",
+                "parameters": [
+                    {
+                        "description": "Send email",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Contact"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/users/": {
             "get": {
                 "security": [
@@ -653,6 +690,29 @@ const docTemplate = `{
                 },
                 "expiresIn": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.Contact": {
+            "type": "object",
+            "required": [
+                "content",
+                "email",
+                "fullName",
+                "title"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
