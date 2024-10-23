@@ -262,14 +262,10 @@ func GetUserDetail(db *sql.DB, userId string) models.UserDetail {
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("userId")
-		currentUserID, exists := c.Get("userId")
-		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
-			return
-		}
+		currentUserId, _ := c.Get("userId")
 
 		currentUserRole, _ := c.Get("role")
-		if currentUserID != userId || currentUserRole != "admin" {
+		if currentUserRole == "user" && currentUserId != userId {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to get this user"})
 			return
 		}
@@ -457,11 +453,7 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{userId} [delete]
 func DeleteUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		currentUserID, exists := c.Get("userId")
-		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
-			return
-		}
+		currentUserId, _ := c.Get("userId")
 
 		currentUserRole, _ := c.Get("role")
 		if currentUserRole != "admin" {
@@ -470,7 +462,7 @@ func DeleteUser(db *sql.DB) gin.HandlerFunc {
 		}
 
 		userIdToDelete := c.Param("userId")
-		if userIdToDelete == currentUserID {
+		if userIdToDelete == currentUserId {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot delete your own account"})
 			return
 		}
