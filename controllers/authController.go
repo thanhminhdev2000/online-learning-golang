@@ -221,11 +221,11 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		var userID int
+		var userId int
 		var tokenExpiryRaw []uint8
 		query := "SELECT userId, expiry FROM reset_pw_tokens WHERE token = ?"
 
-		err := db.QueryRow(query, token).Scan(&userID, &tokenExpiryRaw)
+		err := db.QueryRow(query, token).Scan(&userId, &tokenExpiryRaw)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid or expired token"})
@@ -255,7 +255,7 @@ func ResetPassword(db *sql.DB) gin.HandlerFunc {
 		}
 
 		updateQuery := "UPDATE users SET password = ? WHERE id = ?"
-		_, err = db.Exec(updateQuery, hashedPassword, userID)
+		_, err = db.Exec(updateQuery, hashedPassword, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to reset password"})
 			return

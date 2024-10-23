@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"online-learning-golang/cloudinary"
@@ -132,6 +131,12 @@ func CreateUserAdmin(db *sql.DB) gin.HandlerFunc {
 // @Router /users/ [get]
 func GetUsers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to get list user"})
+			return
+		}
+
 		var queryParams models.UserQueryParams
 
 		if err := c.ShouldBindQuery(&queryParams); err != nil {
@@ -257,6 +262,18 @@ func GetUserDetail(db *sql.DB, userId string) models.UserDetail {
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("userId")
+		currentUserID, exists := c.Get("userId")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
+			return
+		}
+
+		currentUserRole, _ := c.Get("role")
+		if currentUserID != userId || currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to get this user"})
+			return
+		}
+
 		user := GetUserDetail(db, userId)
 		c.JSON(http.StatusOK, user)
 	}
@@ -277,6 +294,12 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{userId} [put]
 func UpdateUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this user"})
+			return
+		}
+
 		userId := c.Param("userId")
 		var updateUser models.UserDetail
 
@@ -313,6 +336,12 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{userId}/password [put]
 func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this user"})
+			return
+		}
+
 		userId := c.Param("userId")
 
 		var req struct {
@@ -373,6 +402,12 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{userId}/avatar [put]
 func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this user"})
+			return
+		}
+
 		userId := c.Param("userId")
 
 		file, err := c.FormFile("avatar")
@@ -422,32 +457,26 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{userId} [delete]
 func DeleteUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		currentUserID, exists := c.Get("userID")
+		currentUserID, exists := c.Get("userId")
 		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
 			return
 		}
 
-		var currentUserIDStr string
-
-		switch v := currentUserID.(type) {
-		case int:
-			currentUserIDStr = fmt.Sprintf("%d", v)
-		case string:
-			currentUserIDStr = v
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type"})
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this user"})
 			return
 		}
 
-		userIDToDelete := c.Param("userId")
-		if userIDToDelete == currentUserIDStr {
+		userIdToDelete := c.Param("userId")
+		if userIdToDelete == currentUserID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot delete your own account"})
 			return
 		}
 
 		query := "UPDATE users SET deleted_at = NOW() WHERE id = ?"
-		result, err := db.Exec(query, userIDToDelete)
+		result, err := db.Exec(query, userIdToDelete)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete user"})
 			return

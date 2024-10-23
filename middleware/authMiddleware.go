@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"online-learning-golang/utils"
@@ -26,7 +27,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", userId)
+		userIdStr := strconv.Itoa(userId)
+		c.Set("userId", userIdStr)
 		c.Set("role", role)
 		c.Next()
 	}

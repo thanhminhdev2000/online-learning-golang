@@ -9,12 +9,12 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func CreateToken(userID int, role string, expirationTime time.Duration) (string, int64, error) {
+func CreateToken(userId int, role string, expirationTime time.Duration) (string, int64, error) {
 	expiration := time.Now().Add(expirationTime)
 	var jwtKey = []byte(os.Getenv("JWT_KEY"))
 
 	claims := jwt.MapClaims{
-		"userID": strconv.Itoa(userID),
+		"userId": strconv.Itoa(userId),
 		"role":   role,
 		"exp":    expiration.Unix(),
 	}
@@ -27,12 +27,12 @@ func CreateToken(userID int, role string, expirationTime time.Duration) (string,
 	return tokenString, int64(expirationTime.Seconds()), nil
 }
 
-func CreateAccessToken(userID int, role string) (string, int64, error) {
-	return CreateToken(userID, role, 10*time.Minute)
+func CreateAccessToken(userId int, role string) (string, int64, error) {
+	return CreateToken(userId, role, 1*time.Hour)
 }
 
-func CreateRefreshToken(userID int, role string) (string, int64, error) {
-	return CreateToken(userID, role, 7*24*time.Hour)
+func CreateRefreshToken(userId int, role string) (string, int64, error) {
+	return CreateToken(userId, role, 7*24*time.Hour)
 }
 
 func ValidToken(tokenString string) (int, string, error) {
@@ -56,19 +56,19 @@ func ValidToken(tokenString string) (int, string, error) {
 			}
 		}
 
-		// Kiểm tra và chuyển đổi kiểu dữ liệu của userID
-		var userID int
-		switch id := claims["userID"].(type) {
+		// Kiểm tra và chuyển đổi kiểu dữ liệu của userId
+		var userId int
+		switch id := claims["userId"].(type) {
 		case string:
-			userIDInt, err := strconv.Atoi(id)
+			userIdInt, err := strconv.Atoi(id)
 			if err != nil {
-				return 0, "", fmt.Errorf("invalid userID in token")
+				return 0, "", fmt.Errorf("invalid userId in token")
 			}
-			userID = userIDInt
+			userId = userIdInt
 		case float64:
-			userID = int(id)
+			userId = int(id)
 		default:
-			return 0, "", fmt.Errorf("userID not found in token")
+			return 0, "", fmt.Errorf("userId not found in token")
 		}
 
 		// Kiểm tra role
@@ -79,7 +79,7 @@ func ValidToken(tokenString string) (int, string, error) {
 			return 0, "", fmt.Errorf("role not found in token")
 		}
 
-		return userID, role, nil
+		return userId, role, nil
 	}
 
 	return 0, "", fmt.Errorf("invalid token")
