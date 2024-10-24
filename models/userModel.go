@@ -1,7 +1,6 @@
 package models
 
 import (
-	"database/sql"
 	"time"
 )
 
@@ -49,17 +48,15 @@ type LoginResponse struct {
 }
 
 type UserDetail struct {
-	ID          int          `json:"id" validate:"required"`
-	Email       string       `json:"email" validate:"required"`
-	Username    string       `json:"username" validate:"required"`
-	FullName    string       `json:"fullName" validate:"required"`
-	Gender      UserGender   `json:"gender" validate:"required"`
-	Avatar      string       `json:"avatar" validate:"required"`
-	DateOfBirth string       `json:"dateOfBirth" validate:"required"`
-	Role        UserRole     `json:"role" validate:"required"`
-	CreatedAt   time.Time    `json:"created_at" validate:"required"`
-	UpdatedAt   time.Time    `json:"updated_at" validate:"required"`
-	DeletedAt   sql.NullTime `json:"deleted_at" validate:"required"`
+	ID          int        `json:"id" validate:"required"`
+	Email       string     `json:"email" validate:"required"`
+	Username    string     `json:"username" validate:"required"`
+	FullName    string     `json:"fullName" validate:"required"`
+	Gender      UserGender `json:"gender" validate:"required"`
+	Avatar      string     `json:"avatar" validate:"required"`
+	DateOfBirth string     `json:"dateOfBirth" validate:"required"`
+	Role        UserRole   `json:"role" validate:"required"`
+	CreatedAt   time.Time  `json:"createdAt" validate:"required"`
 }
 
 type UserToken struct {

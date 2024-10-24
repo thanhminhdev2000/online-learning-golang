@@ -887,6 +887,7 @@
             "type": "object",
             "required": [
                 "avatar",
+                "createdAt",
                 "dateOfBirth",
                 "email",
                 "fullName",
@@ -897,6 +898,9 @@
             ],
             "properties": {
                 "avatar": {
+                    "type": "string"
+                },
+                "createdAt": {
                     "type": "string"
                 },
                 "dateOfBirth": {

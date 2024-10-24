@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"online-learning-golang/controllers"
 	"online-learning-golang/database"
@@ -39,11 +41,19 @@ func main() {
 		log.Fatalf("Error loading .env file")
 	}
 
+	reset := flag.Bool("reset", false, "Reset the database")
+	flag.Parse()
 	db, err := database.ConnectMySQL()
 	if err != nil {
 		log.Fatal("Database connection failed:", err)
 	}
 	defer db.Close()
+
+	if *reset {
+		database.ResetDataBase(db)
+		fmt.Println("Database reset successfully!")
+		return
+	}
 
 	router := gin.New()
 	router.RedirectTrailingSlash = false

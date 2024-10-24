@@ -893,6 +893,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "avatar",
+                "createdAt",
                 "dateOfBirth",
                 "email",
                 "fullName",
@@ -903,6 +904,9 @@ const docTemplate = `{
             ],
             "properties": {
                 "avatar": {
+                    "type": "string"
+                },
+                "createdAt": {
                     "type": "string"
                 },
                 "dateOfBirth": {
