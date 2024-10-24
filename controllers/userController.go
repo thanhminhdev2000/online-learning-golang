@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"online-learning-golang/cloudinary"
@@ -274,7 +275,7 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 
 		user, err := GetUserDetail(db, userId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to get user"})
+			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
 			return
 		}
 
@@ -293,6 +294,7 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 // @Param user body models.UserDetail true "User data"
 // @Success 200 {object} models.UpdateUserResponse
 // @Failure 400 {object} models.Error
+// @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
 // @Router /users/{userId} [put]
 func UpdateUser(db *sql.DB) gin.HandlerFunc {
@@ -307,6 +309,7 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 		var updateUser models.UserDetail
 
 		if err := c.ShouldBindJSON(&updateUser); err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
 			return
 		}
@@ -318,7 +321,12 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		user, _ := GetUserDetail(db, userId)
+		user, err := GetUserDetail(db, userId)
+		if err != nil {
+			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
+			return
+		}
+
 		c.JSON(http.StatusOK, models.UpdateUserResponse{Message: "User updated successfully", User: user})
 	}
 }
@@ -401,6 +409,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 // @Param avatar formData file true "User Avatar"
 // @Success 200 {object} models.UpdateUserResponse
 // @Failure 400 {object} models.Error
+// @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
 // @Router /users/{userId}/avatar [put]
 func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
@@ -445,7 +454,7 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 
 		user, err := GetUserDetail(db, userId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update user"})
+			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
 			return
 		}
 		c.JSON(http.StatusOK, models.UpdateUserResponse{Message: "Avatar updated successfully", User: user})
