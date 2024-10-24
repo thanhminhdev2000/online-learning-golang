@@ -40,9 +40,14 @@ func SendResetEmail(userEmail, token string) error {
 func SendContactEmail(data models.Contact) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", fmt.Sprintf("Support Team <%s>", os.Getenv("SMTP_EMAIL")))
-	m.SetHeader("To", data.Email)
+	m.SetHeader("To", "thanhminh.nguyendev@gmail.com")
 	m.SetHeader("Subject", data.Title)
-	m.SetBody("text/html", data.Content)
+
+	body := fmt.Sprintf(`
+	<p>%s</p>
+	<p><strong>Liên hệ:</strong> %s</p>
+	`, data.Content, data.Email)
+	m.SetBody("text/html", body)
 
 	d := gomail.NewDialer(os.Getenv("SMTP_HOST"), 587, os.Getenv("SMTP_EMAIL"), os.Getenv("SMTP_PASSWORD"))
 
