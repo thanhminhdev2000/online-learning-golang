@@ -10,6 +10,7 @@ import (
 
 func UserRoutes(router *gin.RouterGroup, db *sql.DB) {
 	router.POST("/", controllers.CreateUser(db))
+	router.POST("/admin", middleware.AuthMiddleware(), controllers.CreateUserAdmin(db))
 	router.GET("/", middleware.AuthMiddleware(), controllers.GetUsers(db))
 	router.GET("/:userId", middleware.AuthMiddleware(), controllers.GetUserByID(db))
 	router.PUT("/:userId", middleware.AuthMiddleware(), controllers.UpdateUser(db))

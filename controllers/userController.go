@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"online-learning-golang/cloudinary"
@@ -60,18 +59,150 @@ func CreateUser(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+// CreateUser godoc
+// @Summary Register a new user
+// @Description Register a new user with email, username, and password
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param user body models.CreateUserRequest true "User data"
+// @Success 200 {object} models.Message
+// @Failure 400 {object} models.Error
+// @Failure 409 {object} models.Error
+// @Router /users/admin [post]
+func CreateUserAdmin(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var user models.CreateUserRequest
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
+			return
+		}
+
+		var exists bool
+		query := "SELECT EXISTS(SELECT 1 FROM users WHERE email = ? OR username = ?)"
+		err := db.QueryRow(query, user.Email, user.Username).Scan(&exists)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to check for existing user"})
+			return
+		}
+		if exists {
+			c.JSON(http.StatusConflict, models.Error{Error: "Email or username already exists"})
+			return
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to hash password"})
+			return
+		}
+
+		currentUserRole, _ := c.Get("role")
+
+		if currentUserRole != "admin" && user.Role == "admin" {
+			c.JSON(http.StatusForbidden, models.Error{Error: "Only admins are allowed to create admin users."})
+			return
+		}
+		query = "INSERT INTO users (email, username, fullName, password, gender, avatar, dateOfBirth, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+		_, err = db.Exec(query, user.Email, user.Username, user.FullName, hashedPassword, user.Gender, user.Avatar, user.DateOfBirth, user.Role)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to register user"})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.Message{Message: "User registered successfully"})
+	}
+}
+
 // GetUsers godoc
 // @Summary Get all users
-// @Description Retrieve a list of all users
+// @Description Retrieve a list of all users, with optional filters for email, username, full name, date of birth, role, and pagination.
 // @Tags User
 // @Security BearerAuth
 // @Produce json
-// @Success 200 {array} models.UserDetail
+// @Param email query string false "Filter by email"
+// @Param username query string false "Filter by username"
+// @Param fullName query string false "Filter by full name"
+// @Param dateOfBirth query string false "Filter by date of birth"
+// @Param role query string false "Filter by role"
+// @Param page query int false "Page number for pagination"
+// @Param limit query int false "Limit number of items per page (max 100)"
+// @Success 200 {object} models.UserResponse
 // @Failure 500 {object} models.Error
 // @Router /users/ [get]
 func GetUsers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		rows, err := db.Query("SELECT id, email, username, fullName, gender, avatar, dateOfBirth FROM users WHERE deleted_at IS NULL")
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to get list user"})
+			return
+		}
+
+		var queryParams models.UserQueryParams
+
+		if err := c.ShouldBindQuery(&queryParams); err != nil {
+			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid query parameters"})
+			return
+		}
+
+		query := "SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role FROM users WHERE deleted_at IS NULL"
+		countQuery := "SELECT COUNT(*) FROM users WHERE deleted_at IS NULL"
+
+		var params []interface{}
+		var countParams []interface{}
+
+		if queryParams.Email != "" {
+			query += " AND email LIKE ?"
+			countQuery += " AND email LIKE ?"
+			params = append(params, "%"+queryParams.Email+"%")
+			countParams = append(countParams, "%"+queryParams.Email+"%")
+		}
+		if queryParams.Username != "" {
+			query += " AND username LIKE ?"
+			countQuery += " AND username LIKE ?"
+			params = append(params, "%"+queryParams.Username+"%")
+			countParams = append(countParams, "%"+queryParams.Username+"%")
+		}
+		if queryParams.FullName != "" {
+			query += " AND fullName LIKE ?"
+			countQuery += " AND fullName LIKE ?"
+			params = append(params, "%"+queryParams.FullName+"%")
+			countParams = append(countParams, "%"+queryParams.FullName+"%")
+		}
+		if queryParams.DateOfBirth != "" {
+			query += " AND dateOfBirth LIKE ?"
+			countQuery += " AND dateOfBirth LIKE ?"
+			params = append(params, "%"+queryParams.DateOfBirth+"%")
+			countParams = append(countParams, "%"+queryParams.DateOfBirth+"%")
+		}
+		if queryParams.Role != "" {
+			query += " AND role = ?"
+			countQuery += " AND role = ?"
+			params = append(params, queryParams.Role)
+			countParams = append(countParams, queryParams.Role)
+		}
+
+		page := queryParams.Page
+		limit := queryParams.Limit
+
+		if page == 0 {
+			page = 1
+		}
+		if limit == 0 {
+			limit = 10
+		}
+
+		var totalCount int
+		err := db.QueryRow(countQuery, countParams...).Scan(&totalCount)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to count users"})
+			return
+		}
+
+		offset := (page - 1) * limit
+		query += " LIMIT ? OFFSET ?"
+		params = append(params, limit, offset)
+
+		rows, err := db.Query(query, params...)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to fetch users"})
 			return
@@ -82,7 +213,7 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var user models.UserDetail
-			if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth); err != nil {
+			if err := rows.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role); err != nil {
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to scan user"})
 				return
 			}
@@ -90,15 +221,28 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 			users = append(users, user)
 		}
 
-		c.JSON(http.StatusOK, users)
+		if len(users) == 0 {
+			users = []models.UserDetail{}
+		}
+
+		response := models.UserResponse{
+			Data: users,
+			Paging: models.PagingInfo{
+				Page:       page,
+				Limit:      limit,
+				TotalCount: totalCount,
+			},
+		}
+
+		c.JSON(http.StatusOK, response)
 	}
 }
 
 func GetUserDetail(db *sql.DB, userId string) models.UserDetail {
-	row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth FROM users WHERE id = ?", userId)
+	row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role FROM users WHERE id = ?", userId)
 
 	var user models.UserDetail
-	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth); err != nil {
+	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role); err != nil {
 		log.Fatal("Failed to fetch user")
 	}
 	return user
@@ -118,6 +262,14 @@ func GetUserDetail(db *sql.DB, userId string) models.UserDetail {
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("userId")
+		currentUserId, _ := c.Get("userId")
+
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole == "user" && currentUserId != userId {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to get this user"})
+			return
+		}
+
 		user := GetUserDetail(db, userId)
 		c.JSON(http.StatusOK, user)
 	}
@@ -138,6 +290,12 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{userId} [put]
 func UpdateUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this user"})
+			return
+		}
+
 		userId := c.Param("userId")
 		var updateUser models.UserDetail
 
@@ -174,6 +332,12 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{userId}/password [put]
 func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this user"})
+			return
+		}
+
 		userId := c.Param("userId")
 
 		var req struct {
@@ -234,6 +398,12 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{userId}/avatar [put]
 func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this user"})
+			return
+		}
+
 		userId := c.Param("userId")
 
 		file, err := c.FormFile("avatar")
@@ -248,7 +418,6 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 		defer fileContent.Close()
-		fmt.Println("fileContent", fileContent)
 
 		cld, err := cloudinary.SetupCloudinary()
 		if err != nil {
@@ -284,10 +453,22 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{userId} [delete]
 func DeleteUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId := c.Param("userId")
+		currentUserId, _ := c.Get("userId")
+
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this user"})
+			return
+		}
+
+		userIdToDelete := c.Param("userId")
+		if userIdToDelete == currentUserId {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot delete your own account"})
+			return
+		}
 
 		query := "UPDATE users SET deleted_at = NOW() WHERE id = ?"
-		result, err := db.Exec(query, userId)
+		result, err := db.Exec(query, userIdToDelete)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete user"})
 			return
