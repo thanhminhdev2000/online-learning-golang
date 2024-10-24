@@ -10,6 +10,19 @@ definitions:
     - accessToken
     - expiresIn
     type: object
+  models.ClassWithSubjects:
+    properties:
+      classId:
+        type: integer
+      className:
+        type: string
+      count:
+        type: integer
+      subjects:
+        items:
+          $ref: '#/definitions/models.SubjectId'
+        type: array
+    type: object
   models.Contact:
     properties:
       content:
@@ -133,6 +146,15 @@ definitions:
         type: string
     required:
     - password
+    type: object
+  models.SubjectId:
+    properties:
+      count:
+        type: integer
+      subjectId:
+        type: integer
+      subjectName:
+        type: string
     type: object
   models.UpdateUserResponse:
     properties:
@@ -339,7 +361,7 @@ paths:
       summary: Reset user password
       tags:
       - Authentication
-  /contact:
+  /contact/:
     post:
       description: Send email contact
       parameters:
@@ -363,6 +385,25 @@ paths:
       summary: Send email contact
       tags:
       - Contact
+  /documentations/:
+    get:
+      description: List of classes with their subjects and document counts
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ClassWithSubjects'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: List of classes with their subjects and document counts
+      tags:
+      - Documentation
   /users/:
     get:
       description: Retrieve a list of all users, with optional filters for email,

@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"online-learning-golang/controllers"
 	"online-learning-golang/database"
 	"online-learning-golang/routes"
 	"os"
@@ -69,7 +68,8 @@ func main() {
 	apiPrefix := os.Getenv("API_PREFIX")
 	routes.UserRoutes(router.Group(apiPrefix+"/users"), db)
 	routes.AuthRoutes(router.Group(apiPrefix+"/auth"), db)
-	router.POST(apiPrefix+"/contact", controllers.Contact(db))
+	routes.DocumentationRoutes(router.Group(apiPrefix+"/documentations"), db)
+	routes.ContactRoutes(router.Group(apiPrefix+"/contact"), db)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

@@ -211,7 +211,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/contact": {
+        "/contact/": {
             "post": {
                 "description": "Send email contact",
                 "produces": [
@@ -237,6 +237,37 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/documentations/": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List of classes with their subjects and document counts",
+                "tags": [
+                    "Documentation"
+                ],
+                "summary": "List of classes with their subjects and document counts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ClassWithSubjects"
+                            }
                         }
                     },
                     "500": {
@@ -705,6 +736,26 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ClassWithSubjects": {
+            "type": "object",
+            "properties": {
+                "classId": {
+                    "type": "integer"
+                },
+                "className": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "subjects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.SubjectId"
+                    }
+                }
+            }
+        },
         "models.Contact": {
             "type": "object",
             "required": [
@@ -883,6 +934,20 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 6
+                }
+            }
+        },
+        "models.SubjectId": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "subjectId": {
+                    "type": "integer"
+                },
+                "subjectName": {
+                    "type": "string"
                 }
             }
         },

@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -185,6 +186,80 @@ func InsertTestAccounts(db *sql.DB) error {
 	return nil
 }
 
+func InsertClassesData(db *sql.DB) error {
+	classes := []string{
+		"Đề thi thử đại học", "Lớp 12", "Lớp 11", "Lớp 10", "Thi vào lớp 10",
+		"Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6", "Thi vào lớp 6", "Lớp 5", "Lớp 4",
+		"Lớp 3", "Lớp 2", "Lớp 1",
+	}
+
+	query := `INSERT INTO classes (name) VALUES (?)`
+	for _, className := range classes {
+		_, err := db.Exec(query, className)
+		if err != nil {
+			return fmt.Errorf("failed to insert class %s: %w", className, err)
+		}
+	}
+
+	return nil
+}
+
+func InsertSubjectsData(db *sql.DB) error {
+	subjects := []string{
+		"Ngữ Văn", "Toán", "Tiếng Anh", "Vật lí", "Hóa Học", "Sinh học",
+		"Lịch sử", "Địa lí", "Giáo dục công dân",
+	}
+
+	queryGetClassId := `SELECT id FROM classes WHERE name = ?`
+	queryInsertSubject := `INSERT INTO subjects (classId, name) VALUES (?, ?)`
+
+	classes := []string{
+		"Đề thi thử đại học", "Lớp 12", "Lớp 11", "Lớp 10", "Thi vào lớp 10",
+		"Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6", "Thi vào lớp 6", "Lớp 5", "Lớp 4",
+		"Lớp 3", "Lớp 2", "Lớp 1",
+	}
+
+	for _, className := range classes {
+		var classId int
+		err := db.QueryRow(queryGetClassId, className).Scan(&classId)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve classId for class %s: %w", className, err)
+		}
+
+		for _, subject := range subjects {
+			_, err := db.Exec(queryInsertSubject, classId, subject)
+			if err != nil {
+				return fmt.Errorf("failed to insert subject %s for class %s: %w", subject, className, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func InsertDocumentsData(db *sql.DB) error {
+	document := struct {
+		Title        string
+		FileUrl      string
+		DocumentType string
+	}{
+		"Đề số ", "https://example.com/de", "PDF",
+	}
+
+	queryInsertDocument := `INSERT INTO documents (subjectId, title, fileUrl, documentType) VALUES (?, ?, ?, ?)`
+
+	for index := 0; index < 1000; index++ {
+		IdStr := strconv.Itoa(index)
+		_, err := db.Exec(queryInsertDocument, index%135+1, document.Title+IdStr, document.FileUrl+IdStr+".pdf", document.DocumentType)
+		if err != nil {
+			fmt.Println(err)
+			return fmt.Errorf("failed to insert document %s: %w", document.Title+IdStr, err)
+		}
+	}
+
+	return nil
+}
+
 func ResetDataBase(db *sql.DB) {
 	DropResetPasswordTokensTable(db)
 	DropUsersTable(db)
@@ -199,4 +274,7 @@ func ResetDataBase(db *sql.DB) {
 	CreateDocumentsTable(db)
 
 	InsertTestAccounts(db)
+	InsertClassesData(db)
+	InsertSubjectsData(db)
+	InsertDocumentsData(db)
 }
