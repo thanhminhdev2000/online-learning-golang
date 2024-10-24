@@ -342,7 +342,7 @@ paths:
       parameters:
       - description: Send email
         in: body
-        name: user
+        name: contact
         required: true
         schema:
           $ref: '#/definitions/models.Contact'

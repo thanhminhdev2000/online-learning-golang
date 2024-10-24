@@ -224,7 +224,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Send email",
-                        "name": "user",
+                        "name": "contact",
                         "in": "body",
                         "required": true,
                         "schema": {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"online-learning-golang/controllers"
 	"online-learning-golang/database"
 	"online-learning-golang/routes"
 	"os"
@@ -45,6 +46,7 @@ func main() {
 	defer db.Close()
 
 	router := gin.New()
+	router.RedirectTrailingSlash = false
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
@@ -57,7 +59,7 @@ func main() {
 	apiPrefix := os.Getenv("API_PREFIX")
 	routes.UserRoutes(router.Group(apiPrefix+"/users"), db)
 	routes.AuthRoutes(router.Group(apiPrefix+"/auth"), db)
-	routes.ContactRoutes(router.Group(apiPrefix+"/contact"), db)
+	router.POST(apiPrefix+"/contact", controllers.Contact(db))
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
