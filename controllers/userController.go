@@ -239,10 +239,10 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 }
 
 func GetUserDetail(db *sql.DB, userId string) models.UserDetail {
-	row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role FROM users WHERE id = ?", userId)
+	row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role, deleted_at FROM users WHERE id = ?", userId)
 
 	var user models.UserDetail
-	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role); err != nil {
+	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role, &user.DeletedAt); err != nil {
 		log.Fatal("Failed to fetch user")
 	}
 	return user
@@ -261,6 +261,7 @@ func GetUserDetail(db *sql.DB, userId string) models.UserDetail {
 // @Router /users/{userId} [get]
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		userId := c.Param("userId")
 		currentUserId, _ := c.Get("userId")
 
@@ -271,6 +272,11 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 		}
 
 		user := GetUserDetail(db, userId)
+		if user.DeletedAt.Valid {
+			c.JSON(http.StatusForbidden, models.Error{Error: "Your account has been deleted"})
+			return
+		}
+
 		c.JSON(http.StatusOK, user)
 	}
 }
@@ -304,14 +310,20 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		query := "UPDATE users SET email = ?, username = ?, fullName = ?, avatar = ? WHERE id = ?"
-		_, err := db.Exec(query, updateUser.Email, updateUser.Username, updateUser.FullName, updateUser.Avatar, userId)
+		user := GetUserDetail(db, userId)
+		if user.DeletedAt.Valid {
+			c.JSON(http.StatusForbidden, models.Error{Error: "Your account has been deleted"})
+			return
+		}
+
+		query := "UPDATE users SET email = ?, username = ?, fullName = ?, gender = ?, dateOfBirth = ? WHERE id = ?"
+		_, err := db.Exec(query, updateUser.Email, updateUser.Username, updateUser.FullName, updateUser.Gender, updateUser.DateOfBirth, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update user"})
 			return
 		}
+		user = GetUserDetail(db, userId)
 
-		user := GetUserDetail(db, userId)
 		c.JSON(http.StatusOK, models.UpdateUserResponse{Message: "User updated successfully", User: user})
 	}
 }
@@ -339,6 +351,11 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 		}
 
 		userId := c.Param("userId")
+		user := GetUserDetail(db, userId)
+		if user.DeletedAt.Valid {
+			c.JSON(http.StatusForbidden, models.Error{Error: "Your account has been deleted"})
+			return
+		}
 
 		var req struct {
 			CurrentPassword string `json:"currentPassword"`
@@ -405,6 +422,11 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 		}
 
 		userId := c.Param("userId")
+		user := GetUserDetail(db, userId)
+		if user.DeletedAt.Valid {
+			c.JSON(http.StatusForbidden, models.Error{Error: "Your account has been deleted"})
+			return
+		}
 
 		file, err := c.FormFile("avatar")
 		if err != nil {
@@ -436,7 +458,7 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		user := GetUserDetail(db, userId)
+		user = GetUserDetail(db, userId)
 		c.JSON(http.StatusOK, models.UpdateUserResponse{Message: "Avatar updated successfully", User: user})
 	}
 }

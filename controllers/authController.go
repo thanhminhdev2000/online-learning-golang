@@ -36,19 +36,24 @@ func Login(db *sql.DB) gin.HandlerFunc {
 		isEmail, _ := regexp.MatchString(`^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$`, loginData.Identifier)
 		var query string
 		if isEmail {
-			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth, role FROM users WHERE email = ?"
+			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth, role, deleted_at FROM users WHERE email = ?"
 		} else {
-			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth, role FROM users WHERE username = ?"
+			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth, role, deleted_at FROM users WHERE username = ?"
 		}
 
 		err := db.QueryRow(query, loginData.Identifier).
-			Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &storedPassword, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role)
+			Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &storedPassword, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role, &user.DeletedAt)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid email or password"})
 				return
 			}
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Database query error"})
+			return
+		}
+
+		if user.DeletedAt.Valid {
+			c.JSON(http.StatusForbidden, models.Error{Error: "Your account has been deleted"})
 			return
 		}
 

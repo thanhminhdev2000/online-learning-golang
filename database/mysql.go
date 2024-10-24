@@ -30,7 +30,6 @@ func ConnectMySQL() (*sql.DB, error) {
 
 	// DropResetPasswordTokensTable(db)
 	// DropUsersTable(db)
-	// DropContactsTable(db)
 	// CreateUsersTable(db)
 	// CreateResetPasswordTokensTable(db)
 	// InsertTestAccounts(db)
@@ -44,7 +43,7 @@ func CreateUsersTable(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS users (
 		id INT AUTO_INCREMENT PRIMARY KEY,
 		email VARCHAR(50) NOT NULL UNIQUE,
-		username VARCHAR(50) NOT NULL UNIQUE,
+		username VARCHAR(20) NOT NULL UNIQUE,
 		fullName VARCHAR(50) NOT NULL,
 		password VARCHAR(255) NOT NULL,
 		gender ENUM('male', 'female') NOT NULL DEFAULT 'male', 
