@@ -22,6 +22,11 @@ definitions:
         items:
           $ref: '#/definitions/models.SubjectId'
         type: array
+    required:
+    - classId
+    - className
+    - count
+    - subjects
     type: object
   models.Contact:
     properties:
@@ -155,6 +160,10 @@ definitions:
         type: integer
       subjectName:
         type: string
+    required:
+    - count
+    - subjectId
+    - subjectName
     type: object
   models.UpdateUserResponse:
     properties:
@@ -404,39 +413,70 @@ paths:
       summary: List of classes with their subjects and document counts
       tags:
       - Documentation
+  /documentations/upload:
+    post:
+      description: Upload document file
+      parameters:
+      - description: Subject ID
+        in: formData
+        name: subjectId
+        required: true
+        type: integer
+      - description: Document title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ClassWithSubjects'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Upload document file
+      tags:
+      - Documentation
   /users/:
     get:
       description: Retrieve a list of all users, with optional filters for email,
         username, full name, date of birth, role, and pagination.
       parameters:
-      - description: Filter by email
-        in: query
-        name: email
-        type: string
-      - description: Filter by username
-        in: query
-        name: username
-        type: string
-      - description: Filter by full name
-        in: query
-        name: fullName
-        type: string
-      - description: Filter by date of birth
-        in: query
+      - in: query
         name: dateOfBirth
         type: string
-      - description: Filter by role
-        in: query
-        name: role
+      - in: query
+        name: email
         type: string
-      - description: Page number for pagination
-        in: query
-        name: page
-        type: integer
-      - description: Limit number of items per page (max 100)
-        in: query
+      - in: query
+        name: fullName
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
         name: limit
         type: integer
+      - in: query
+        minimum: 1
+        name: page
+        type: integer
+      - in: query
+        name: role
+        type: string
+      - in: query
+        name: username
+        type: string
       produces:
       - application/json
       responses:

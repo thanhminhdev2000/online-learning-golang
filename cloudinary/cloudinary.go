@@ -24,10 +24,30 @@ func SetupCloudinary() (*cloudinary.Cloudinary, error) {
 }
 
 func UploadAvatar(cld *cloudinary.Cloudinary, fileContent io.Reader) (string, error) {
-	uploadResult, err := cld.Upload.Upload(context.Background(), fileContent, uploader.UploadParams{})
+	uploadParams := uploader.UploadParams{
+		Folder:   "avatar",
+		PublicID: "",
+	}
+
+	uploadResult, err := cld.Upload.Upload(context.Background(), fileContent, uploadParams)
 	if err != nil {
 		log.Fatalf("Failed to upload image: %v", err)
 		return "", err
 	}
+	return uploadResult.SecureURL, nil
+}
+
+func UploadDocument(cld *cloudinary.Cloudinary, fileContent io.Reader) (string, error) {
+	uploadParams := uploader.UploadParams{
+		Folder:   "documentation",
+		PublicID: "",
+	}
+
+	uploadResult, err := cld.Upload.Upload(context.Background(), fileContent, uploadParams)
+	if err != nil {
+		log.Printf("Failed to upload document: %v", err)
+		return "", err
+	}
+
 	return uploadResult.SecureURL, nil
 }

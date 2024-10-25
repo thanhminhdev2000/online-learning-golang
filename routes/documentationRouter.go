@@ -9,4 +9,5 @@ import (
 
 func DocumentationRoutes(router *gin.RouterGroup, db *sql.DB) {
 	router.GET("/", controllers.GetListClassesWithSubjects(db))
+	router.POST("/upload", controllers.UploadDocumentation(db))
 }

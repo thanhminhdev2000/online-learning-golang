@@ -133,6 +133,8 @@ func CreateDocumentsTable(db *sql.DB) error {
         title VARCHAR(255) NOT NULL,
         fileUrl VARCHAR(255),
         documentType ENUM('PDF', 'VIDEO', 'DOC') NOT NULL DEFAULT 'PDF',
+		views INT DEFAULT 0,
+        downloads INT DEFAULT 0,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE
     );`

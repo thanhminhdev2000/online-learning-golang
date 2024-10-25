@@ -68,8 +68,8 @@ func main() {
 	apiPrefix := os.Getenv("API_PREFIX")
 	routes.UserRoutes(router.Group(apiPrefix+"/users"), db)
 	routes.AuthRoutes(router.Group(apiPrefix+"/auth"), db)
-	routes.DocumentationRoutes(router.Group(apiPrefix+"/documentations"), db)
 	routes.ContactRoutes(router.Group(apiPrefix+"/contact"), db)
+	routes.DocumentationRoutes(router.Group(apiPrefix+"/documentations"), db)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

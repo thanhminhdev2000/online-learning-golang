@@ -15,13 +15,13 @@ const (
 )
 
 type UserQueryParams struct {
-	Email       string `form:"email"`
-	Username    string `form:"username"`
-	FullName    string `form:"fullName"`
-	DateOfBirth string `form:"dateOfBirth"`
-	Role        string `form:"role"`
-	Page        int    `form:"page" binding:"omitempty,min=1"`
-	Limit       int    `form:"limit" binding:"omitempty,min=1,max=100"`
+	Email       string `json:"email"`
+	Username    string `json:"username"`
+	FullName    string `json:"fullName"`
+	DateOfBirth string `json:"dateOfBirth"`
+	Role        string `json:"role"`
+	Page        int    `json:"page" binding:"omitempty,min=1"`
+	Limit       int    `json:"limit" binding:"omitempty,min=1,max=100"`
 }
 
 type CreateUserRequest struct {

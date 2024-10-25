@@ -1,5 +1,7 @@
 package models
 
+import "mime/multipart"
+
 type Class struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
@@ -12,22 +14,30 @@ type Subject struct {
 }
 
 type Document struct {
-	ID           int    `json:"id"`
-	SubjectId    int    `json:"subjectId"`
-	Title        string `json:"title"`
-	FileUrl      string `json:"fileUrl"`
-	DocumentType string `json:"documentType"`
+	ID           int    `json:"id" validate:"required"`
+	SubjectId    int    `json:"subjectId" validate:"required"`
+	Title        string `json:"title" validate:"required"`
+	FileUrl      string `json:"fileUrl" validate:"required"`
+	DocumentType string `json:"documentType" validate:"required"`
+	Views        string `json:"views" validate:"required"`
+	Downloads    string `json:"downloads" validate:"required"`
 }
 
 type ClassWithSubjects struct {
-	ClassId   int         `json:"classId"`
-	ClassName string      `json:"className"`
-	Count     int         `json:"count"`
-	Subjects  []SubjectId `json:"subjects"`
+	ClassId   int         `json:"classId" validate:"required"`
+	ClassName string      `json:"className" validate:"required"`
+	Count     int         `json:"count" validate:"required"`
+	Subjects  []SubjectId `json:"subjects" validate:"required"`
 }
 
 type SubjectId struct {
-	SubjectId   int    `json:"subjectId"`
-	SubjectName string `json:"subjectName"`
-	Count       int    `json:"count"`
+	SubjectId   int    `json:"subjectId" validate:"required"`
+	SubjectName string `json:"subjectName" validate:"required"`
+	Count       int    `json:"count" validate:"required"`
+}
+
+type UploadRequest struct {
+	SubjectId int                   `form:"subjectId" validate:"required" json:"subjectId"`
+	Title     string                `form:"title" validate:"required" json:"title"`
+	File      *multipart.FileHeader `form:"file" swaggerignore:"true" validate:"required" `
 }

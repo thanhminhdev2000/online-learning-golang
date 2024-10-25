@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"online-learning-golang/cloudinary"
+	cloudinarySetup "online-learning-golang/cloudinary"
 	"online-learning-golang/models"
 
 	"github.com/gin-gonic/gin"
@@ -120,13 +120,7 @@ func CreateUserAdmin(db *sql.DB) gin.HandlerFunc {
 // @Tags User
 // @Security BearerAuth
 // @Produce json
-// @Param email query string false "Filter by email"
-// @Param username query string false "Filter by username"
-// @Param fullName query string false "Filter by full name"
-// @Param dateOfBirth query string false "Filter by date of birth"
-// @Param role query string false "Filter by role"
-// @Param page query int false "Page number for pagination"
-// @Param limit query int false "Limit number of items per page (max 100)"
+// @Param data query models.UserQueryParams false "Filter"
 // @Success 200 {object} models.UserResponse
 // @Failure 500 {object} models.Error
 // @Router /users/ [get]
@@ -435,12 +429,12 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 		}
 		defer fileContent.Close()
 
-		cld, err := cloudinary.SetupCloudinary()
+		cld, err := cloudinarySetup.SetupCloudinary()
 		if err != nil {
 			log.Fatalf("Error setting up Cloudinary: %v", err)
 		}
 
-		avatarURL, err := cloudinary.UploadAvatar(cld, fileContent)
+		avatarURL, err := cloudinarySetup.UploadAvatar(cld, fileContent)
 		if err != nil {
 			log.Fatalf("Error uploading avatar: %v", err)
 		}

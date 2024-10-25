@@ -273,6 +273,60 @@
                 }
             }
         },
+        "/documentations/upload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload document file",
+                "tags": [
+                    "Documentation"
+                ],
+                "summary": "Upload document file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subject ID",
+                        "name": "subjectId",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ClassWithSubjects"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/users/": {
             "get": {
                 "security": [
@@ -291,44 +345,40 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by email",
-                        "name": "email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by username",
-                        "name": "username",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by full name",
-                        "name": "fullName",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by date of birth",
                         "name": "dateOfBirth",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Filter by role",
-                        "name": "role",
+                        "name": "email",
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "name": "fullName",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Page number for pagination",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "Limit number of items per page (max 100)",
-                        "name": "limit",
+                        "type": "string",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "username",
                         "in": "query"
                     }
                 ],
@@ -732,6 +782,12 @@
         },
         "models.ClassWithSubjects": {
             "type": "object",
+            "required": [
+                "classId",
+                "className",
+                "count",
+                "subjects"
+            ],
             "properties": {
                 "classId": {
                     "type": "integer"
@@ -933,6 +989,11 @@
         },
         "models.SubjectId": {
             "type": "object",
+            "required": [
+                "count",
+                "subjectId",
+                "subjectName"
+            ],
             "properties": {
                 "count": {
                     "type": "integer"
