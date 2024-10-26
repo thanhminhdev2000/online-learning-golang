@@ -455,6 +455,29 @@ paths:
       summary: Lấy danh sách tài liệu
       tags:
       - Document
+  /documents/{documentId}:
+    delete:
+      description: Delete a document by document ID
+      parameters:
+      - description: Document ID
+        in: path
+        name: documentId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete document
+      tags:
+      - Document
   /documents/subjects:
     get:
       description: List of classes with their subjects and document counts
@@ -484,6 +507,11 @@ paths:
       - description: Document title
         in: formData
         name: title
+        required: true
+        type: string
+      - description: Document author
+        in: formData
+        name: author
         required: true
         type: string
       - description: File to upload

@@ -89,6 +89,7 @@ func GetListClassesWithSubjects(db *sql.DB) gin.HandlerFunc {
 // @Security BearerAuth
 // @Param subjectId formData int true "Subject ID"
 // @Param title formData string true "Document title"
+// @Param author formData string false "Document author"
 // @Param file formData file true "File to upload"
 // @Success 200 {object} models.Message
 // @Failure 500 {object} models.Error
@@ -123,6 +124,50 @@ func UploadDocument(db *sql.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, models.Message{Message: "Upload document successful"})
+	}
+}
+
+// DeleteDocument godoc
+// @Summary Delete document
+// @Description Delete a document by document ID
+// @Tags Document
+// @Security BearerAuth
+// @Param documentId path int true "Document ID"
+// @Success 200 {object} models.Message
+// @Failure 500 {object} models.Error
+// @Router /documents/{documentId} [delete]
+func DeleteDocument(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, _ := c.Get("role")
+		if role != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this document"})
+			return
+		}
+
+		documentId := c.Param("documentId")
+		var fileUrl string
+		query := "SELECT fileUrl FROM documents WHERE id = ?"
+
+		row := db.QueryRow(query, documentId)
+		if err := row.Scan(&fileUrl); err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete document"})
+			return
+		}
+
+		query = "DELETE FROM documents WHERE id = ?"
+		_, err := db.Exec(query, documentId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete document"})
+			return
+		}
+
+		err = awsSetup.DeletePDF(fileUrl)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete document"})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.Message{Message: "Document deleted successfully"})
 	}
 }
 

@@ -40,7 +40,7 @@ type SubjectId struct {
 type UploadRequest struct {
 	SubjectId int                   `form:"subjectId" validate:"required" json:"subjectId"`
 	Title     string                `form:"title" validate:"required" json:"title"`
-	Author    string                `json:"author" validate:"required"`
+	Author    string                `json:"author"`
 	File      *multipart.FileHeader `form:"file" swaggerignore:"true" validate:"required" `
 }
 

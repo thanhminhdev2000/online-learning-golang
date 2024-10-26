@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/brianvoe/gofakeit/v6"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -138,7 +137,7 @@ func CreateDocumentsTable(db *sql.DB) error {
         documentType ENUM('PDF', 'VIDEO') NOT NULL DEFAULT 'PDF',
 		views INT DEFAULT 0,
         downloads INT DEFAULT 0,
-		author VARCHAR(255) DEFAULT "",
+		author VARCHAR(255) DEFAULT "admin",
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE
     );`
@@ -151,8 +150,8 @@ func CreateDocumentsTable(db *sql.DB) error {
 
 func InsertTestAccounts(db *sql.DB) error {
 	query := `
-	INSERT INTO users (email, username, ?, password, gender, dateOfBirth, role)
-	VALUES (?, ?, 'Admin', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'male', '1985-01-01', ?)
+	INSERT INTO users (email, username, fullName, password, gender, dateOfBirth, role)
+	VALUES (?, ?, ?, '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'male', '1999-09-09', ?)
 	`
 
 	for index := 1; index < 10; index++ {
@@ -182,8 +181,7 @@ func InsertTestAccounts(db *sql.DB) error {
 func InsertClassesData(db *sql.DB) error {
 	classes := []string{
 		"Đề thi thử đại học", "Lớp 12", "Lớp 11", "Lớp 10", "Thi vào lớp 10",
-		"Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6", "Thi vào lớp 6", "Lớp 5", "Lớp 4",
-		"Lớp 3", "Lớp 2", "Lớp 1",
+		"Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6",
 	}
 
 	query := `INSERT INTO classes (name) VALUES (?)`
@@ -199,8 +197,7 @@ func InsertClassesData(db *sql.DB) error {
 
 func InsertSubjectsData(db *sql.DB) error {
 	subjects := []string{
-		"Ngữ Văn", "Toán", "Tiếng Anh", "Vật lí", "Hóa Học", "Sinh học",
-		"Lịch sử", "Địa lí", "Giáo dục công dân",
+		"Toán", "Ngữ Văn", "Tiếng Anh",
 	}
 
 	queryGetClassId := `SELECT id FROM classes WHERE name = ?`
@@ -208,8 +205,7 @@ func InsertSubjectsData(db *sql.DB) error {
 
 	classes := []string{
 		"Đề thi thử đại học", "Lớp 12", "Lớp 11", "Lớp 10", "Thi vào lớp 10",
-		"Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6", "Thi vào lớp 6", "Lớp 5", "Lớp 4",
-		"Lớp 3", "Lớp 2", "Lớp 1",
+		"Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6",
 	}
 
 	for _, className := range classes {
@@ -230,29 +226,31 @@ func InsertSubjectsData(db *sql.DB) error {
 	return nil
 }
 
+type Upload struct {
+	SubjectId int
+	Title     string
+	FileUrl   string
+}
+
 func InsertDocumentsData(db *sql.DB) error {
-	document := struct {
-		Title        string
-		FileUrl      string
-		DocumentType string
-	}{
-		"Đề số ", "https://example.com/de", "PDF",
+	query := `INSERT INTO documents (subjectId, title, fileUrl, views, downloads) VALUES (?, ?, ?, ?, ?)`
+
+	data := []Upload{
+		{1, "Đề thi thử môn Toán tỉnh Bắc Ninh", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Bắc Ninh.pdf"},
+		{1, "Đề thi thử môn Toán tỉnh Nghệ An", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Nghệ An.pdf"},
+		{1, "Đề thi thử môn Toán tỉnh Phú Yên", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Phú Yên.pdf"},
+		{1, "Đề thi thử môn Toán tỉnh Quảng Trị", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Quảng Trị.pdf"},
+		{1, "Đề thi thử môn Toán tỉnh Thanh Hoá", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Thanh Hoá.pdf"},
 	}
 
-	queryInsertDocument := `INSERT INTO documents (subjectId, title, fileUrl, documentType, views, downloads, author) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for _, row := range data {
+		views := rnd.Intn(5000) + 1500
+		downloads := rnd.Intn(1000) + 200
 
-	for index := 1; index < 500; index++ {
-		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-		randomNumber := rnd.Intn(1000) + 1
-		name := gofakeit.Name()
-		views := gofakeit.Number(1, 1000)
-		downloads := gofakeit.Number(1, 1000)
-		title := gofakeit.Book().Title
-
-		IdStr := strconv.Itoa(randomNumber)
-		_, err := db.Exec(queryInsertDocument, randomNumber%135+1, title, document.FileUrl+IdStr+".pdf", document.DocumentType, views, downloads, name)
+		_, err := db.Exec(query, row.SubjectId, row.Title, row.FileUrl, views, downloads)
 		if err != nil {
-			return fmt.Errorf("failed to insert document %s: %w", document.Title+IdStr, err)
+			return fmt.Errorf("failed to insert class %s: %w", row.Title, err)
 		}
 	}
 
