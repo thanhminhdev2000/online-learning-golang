@@ -211,7 +211,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/contact/": {
+        "/contacts/": {
             "post": {
                 "description": "Send email contact",
                 "produces": [
@@ -248,16 +248,64 @@ const docTemplate = `{
                 }
             }
         },
-        "/documentations/": {
+        "/documents/": {
             "get": {
-                "security": [
+                "description": "Trả về danh sách các tài liệu, có thể lọc theo ` + "`" + `subjectId` + "`" + ` và ` + "`" + `title` + "`" + `. Giới hạn số lượng tài liệu trả về bằng tham số ` + "`" + `limit` + "`" + `.",
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Lấy danh sách tài liệu",
+                "parameters": [
                     {
-                        "BearerAuth": []
+                        "type": "integer",
+                        "default": 40,
+                        "description": "Giới hạn số lượng tài liệu trả về",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID của môn học",
+                        "name": "subjectId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tiêu đề của tài liệu (tìm kiếm bằng LIKE)",
+                        "name": "title",
+                        "in": "query"
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.DocumentsResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/subjects": {
+            "get": {
                 "description": "List of classes with their subjects and document counts",
                 "tags": [
-                    "Documentation"
+                    "Document"
                 ],
                 "summary": "List of classes with their subjects and document counts",
                 "responses": {
@@ -279,7 +327,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/documentations/upload": {
+        "/documents/upload": {
             "post": {
                 "security": [
                     {
@@ -288,7 +336,7 @@ const docTemplate = `{
                 ],
                 "description": "Upload document file",
                 "tags": [
-                    "Documentation"
+                    "Document"
                 ],
                 "summary": "Upload document file",
                 "parameters": [
@@ -318,10 +366,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.ClassWithSubjects"
-                            }
+                            "$ref": "#/definitions/models.Message"
                         }
                     },
                     "500": {
@@ -874,6 +919,45 @@ const docTemplate = `{
                 }
             }
         },
+        "models.DocumentsResponse": {
+            "type": "object",
+            "required": [
+                "author",
+                "category",
+                "documentType",
+                "downloads",
+                "fileUrl",
+                "id",
+                "title",
+                "views"
+            ],
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "documentType": {
+                    "type": "string"
+                },
+                "downloads": {
+                    "type": "integer"
+                },
+                "fileUrl": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "views": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.Error": {
             "type": "object",
             "required": [
@@ -1031,7 +1115,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "avatar",
-                "createdAt",
                 "dateOfBirth",
                 "email",
                 "fullName",
@@ -1042,9 +1125,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "avatar": {
-                    "type": "string"
-                },
-                "createdAt": {
                     "type": "string"
                 },
                 "dateOfBirth": {

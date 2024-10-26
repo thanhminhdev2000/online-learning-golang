@@ -17,8 +17,8 @@ import (
 // @Param contact body models.Contact true "Send email"
 // @Success 200 {object} models.Message
 // @Failure 500 {object} models.Error
-// @Router /contact/ [post]
-func Contact(db *sql.DB) gin.HandlerFunc {
+// @Router /contacts/ [post]
+func SendContact(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var content models.Contact
 		if err := c.ShouldBindJSON(&content); err != nil {

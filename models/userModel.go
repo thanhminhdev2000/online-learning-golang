@@ -1,9 +1,5 @@
 package models
 
-import (
-	"time"
-)
-
 type UserRole string
 type UserGender string
 
@@ -56,7 +52,6 @@ type UserDetail struct {
 	Avatar      string     `json:"avatar" validate:"required"`
 	DateOfBirth string     `json:"dateOfBirth" validate:"required"`
 	Role        UserRole   `json:"role" validate:"required"`
-	CreatedAt   time.Time  `json:"createdAt" validate:"required"`
 }
 
 type UserToken struct {

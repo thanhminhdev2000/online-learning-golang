@@ -3,8 +3,11 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"strconv"
+	"time"
 
+	"github.com/brianvoe/gofakeit/v6"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -64,7 +67,7 @@ func CreateUsersTable(db *sql.DB) error {
         fullName VARCHAR(50) NOT NULL,
         password VARCHAR(255) NOT NULL,
         gender ENUM('male', 'female') NOT NULL DEFAULT 'male', 
-        avatar VARCHAR(255) NOT NULL,
+        avatar VARCHAR(255) DEFAULT "",
         dateOfBirth DATE NOT NULL,
         role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -132,9 +135,10 @@ func CreateDocumentsTable(db *sql.DB) error {
         subjectId INT NOT NULL,
         title VARCHAR(255) NOT NULL,
         fileUrl VARCHAR(255),
-        documentType ENUM('PDF', 'VIDEO', 'DOC') NOT NULL DEFAULT 'PDF',
+        documentType ENUM('PDF', 'VIDEO') NOT NULL DEFAULT 'PDF',
 		views INT DEFAULT 0,
         downloads INT DEFAULT 0,
+		author VARCHAR(255) DEFAULT "",
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE
     );`
@@ -147,38 +151,25 @@ func CreateDocumentsTable(db *sql.DB) error {
 
 func InsertTestAccounts(db *sql.DB) error {
 	query := `
-	INSERT INTO users (email, username, fullName, password, gender, avatar, dateOfBirth, role)
-	VALUES ('admin1@gmail.com', 'admin1', 'Admin1', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'male', '', '1985-01-01', 'admin'),
-	('admin2@gmail.com', 'admin2', 'Admin2', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'male', '', '1985-01-01', 'admin'),
-	('admin3@gmail.com', 'admin3', 'Admin3', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'male', '', '1985-01-01', 'admin'),
-	('admin4@gmail.com', 'admin4', 'Admin4', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'male', '', '1985-01-01', 'admin'),
-	('admin5@gmail.com', 'admin5', 'Admin5', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'male', '', '1985-01-01', 'admin'),
-	('user01@gmail.com', 'user01', 'User01', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user02@gmail.com', 'user02', 'User02', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user03@gmail.com', 'user03', 'User03', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user04@gmail.com', 'user04', 'User04', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user05@gmail.com', 'user05', 'User05', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user11@gmail.com', 'user11', 'User11', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user12@gmail.com', 'user12', 'User12', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user13@gmail.com', 'user13', 'User13', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user14@gmail.com', 'user14', 'User14', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user15@gmail.com', 'user15', 'User15', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user21@gmail.com', 'user21', 'User21', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user22@gmail.com', 'user22', 'User22', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user23@gmail.com', 'user23', 'User23', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user24@gmail.com', 'user24', 'User24', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user25@gmail.com', 'user25', 'User25', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user31@gmail.com', 'user31', 'User31', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user32@gmail.com', 'user32', 'User32', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user33@gmail.com', 'user33', 'User33', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user34@gmail.com', 'user34', 'User34', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user35@gmail.com', 'user35', 'User35', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user41@gmail.com', 'user41', 'User41', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user42@gmail.com', 'user42', 'User42', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user43@gmail.com', 'user43', 'User43', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user44@gmail.com', 'user44', 'User44', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user'),
-	('user45@gmail.com', 'user45', 'User45', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'female', '', '1999-09-09', 'user')
+	INSERT INTO users (email, username, ?, password, gender, dateOfBirth, role)
+	VALUES (?, ?, 'Admin', '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'male', '1985-01-01', ?)
 	`
+
+	for index := 1; index < 10; index++ {
+		role := "user"
+		fullName := "User Name"
+		if index%2 == 1 {
+			role = "admin"
+			fullName = "Admin Name"
+		}
+
+		IdStr := strconv.Itoa(index)
+		_, err := db.Exec(query, role+IdStr+"@gmail.com", role+IdStr, fullName+" "+IdStr, role)
+
+		if err != nil {
+			return fmt.Errorf("failed to insert document")
+		}
+	}
 
 	_, err := db.Exec(query)
 	if err != nil {
@@ -248,13 +239,19 @@ func InsertDocumentsData(db *sql.DB) error {
 		"Đề số ", "https://example.com/de", "PDF",
 	}
 
-	queryInsertDocument := `INSERT INTO documents (subjectId, title, fileUrl, documentType) VALUES (?, ?, ?, ?)`
+	queryInsertDocument := `INSERT INTO documents (subjectId, title, fileUrl, documentType, views, downloads, author) VALUES (?, ?, ?, ?, ?, ?, ?)`
 
-	for index := 0; index < 1000; index++ {
-		IdStr := strconv.Itoa(index)
-		_, err := db.Exec(queryInsertDocument, index%135+1, document.Title+IdStr, document.FileUrl+IdStr+".pdf", document.DocumentType)
+	for index := 1; index < 500; index++ {
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+		randomNumber := rnd.Intn(1000) + 1
+		name := gofakeit.Name()
+		views := gofakeit.Number(1, 1000)
+		downloads := gofakeit.Number(1, 1000)
+		title := gofakeit.Book().Title
+
+		IdStr := strconv.Itoa(randomNumber)
+		_, err := db.Exec(queryInsertDocument, randomNumber%135+1, title, document.FileUrl+IdStr+".pdf", document.DocumentType, views, downloads, name)
 		if err != nil {
-			fmt.Println(err)
 			return fmt.Errorf("failed to insert document %s: %w", document.Title+IdStr, err)
 		}
 	}

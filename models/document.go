@@ -19,8 +19,9 @@ type Document struct {
 	Title        string `json:"title" validate:"required"`
 	FileUrl      string `json:"fileUrl" validate:"required"`
 	DocumentType string `json:"documentType" validate:"required"`
-	Views        string `json:"views" validate:"required"`
-	Downloads    string `json:"downloads" validate:"required"`
+	Views        int    `json:"views" validate:"required"`
+	Downloads    int    `json:"downloads" validate:"required"`
+	Author       string `json:"author" validate:"required"`
 }
 
 type ClassWithSubjects struct {
@@ -39,5 +40,17 @@ type SubjectId struct {
 type UploadRequest struct {
 	SubjectId int                   `form:"subjectId" validate:"required" json:"subjectId"`
 	Title     string                `form:"title" validate:"required" json:"title"`
+	Author    string                `json:"author" validate:"required"`
 	File      *multipart.FileHeader `form:"file" swaggerignore:"true" validate:"required" `
+}
+
+type DocumentsResponse struct {
+	ID           int    `json:"id" validate:"required"`
+	Category     string `json:"category" validate:"required"`
+	Title        string `json:"title" validate:"required"`
+	FileUrl      string `json:"fileUrl" validate:"required"`
+	DocumentType string `json:"documentType" validate:"required"`
+	Views        int    `json:"views" validate:"required"`
+	Downloads    int    `json:"downloads" validate:"required"`
+	Author       string `json:"author" validate:"required"`
 }

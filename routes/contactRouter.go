@@ -8,5 +8,5 @@ import (
 )
 
 func ContactRoutes(router *gin.RouterGroup, db *sql.DB) {
-	router.POST("/", controllers.Contact(db))
+	router.POST("/", controllers.SendContact(db))
 }

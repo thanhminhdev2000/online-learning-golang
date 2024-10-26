@@ -72,6 +72,34 @@ definitions:
     - password
     - username
     type: object
+  models.DocumentsResponse:
+    properties:
+      author:
+        type: string
+      category:
+        type: string
+      documentType:
+        type: string
+      downloads:
+        type: integer
+      fileUrl:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      views:
+        type: integer
+    required:
+    - author
+    - category
+    - documentType
+    - downloads
+    - fileUrl
+    - id
+    - title
+    - views
+    type: object
   models.Error:
     properties:
       error:
@@ -179,8 +207,6 @@ definitions:
     properties:
       avatar:
         type: string
-      createdAt:
-        type: string
       dateOfBirth:
         type: string
       email:
@@ -197,7 +223,6 @@ definitions:
         type: string
     required:
     - avatar
-    - createdAt
     - dateOfBirth
     - email
     - fullName
@@ -370,7 +395,7 @@ paths:
       summary: Reset user password
       tags:
       - Authentication
-  /contact/:
+  /contacts/:
     post:
       description: Send email contact
       parameters:
@@ -394,7 +419,43 @@ paths:
       summary: Send email contact
       tags:
       - Contact
-  /documentations/:
+  /documents/:
+    get:
+      description: Trả về danh sách các tài liệu, có thể lọc theo `subjectId` và `title`.
+        Giới hạn số lượng tài liệu trả về bằng tham số `limit`.
+      parameters:
+      - default: 40
+        description: Giới hạn số lượng tài liệu trả về
+        in: query
+        name: limit
+        type: integer
+      - description: ID của môn học
+        in: query
+        name: subjectId
+        type: integer
+      - description: Tiêu đề của tài liệu (tìm kiếm bằng LIKE)
+        in: query
+        name: title
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.DocumentsResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Lấy danh sách tài liệu
+      tags:
+      - Document
+  /documents/subjects:
     get:
       description: List of classes with their subjects and document counts
       responses:
@@ -408,12 +469,10 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.Error'
-      security:
-      - BearerAuth: []
       summary: List of classes with their subjects and document counts
       tags:
-      - Documentation
-  /documentations/upload:
+      - Document
+  /documents/upload:
     post:
       description: Upload document file
       parameters:
@@ -436,9 +495,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.ClassWithSubjects'
-            type: array
+            $ref: '#/definitions/models.Message'
         "500":
           description: Internal Server Error
           schema:
@@ -447,7 +504,7 @@ paths:
       - BearerAuth: []
       summary: Upload document file
       tags:
-      - Documentation
+      - Document
   /users/:
     get:
       description: Retrieve a list of all users, with optional filters for email,
