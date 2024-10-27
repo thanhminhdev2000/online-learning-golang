@@ -1,8 +1,6 @@
 module online-learning-golang
 
-go 1.22.0
-
-toolchain go1.23.2
+go 1.22.7
 
 require (
 	github.com/aws/aws-sdk-go v1.55.5
