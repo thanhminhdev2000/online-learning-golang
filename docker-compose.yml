@@ -27,6 +27,18 @@ services:
     networks:
       - go-network
 
+  golang-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: golang-server-container
+    ports:
+      - "8080:8080"
+    networks:
+      - go-network
+    depends_on:
+      - mysql
+
 volumes:
   mysql_data:
 
