@@ -1,8 +1,12 @@
 module online-learning-golang
 
-go 1.22.7
+go 1.22.0
+
+toolchain go1.23.2
 
 require (
+	github.com/aws/aws-sdk-go v1.55.5
+	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cloudinary/cloudinary-go/v2 v2.9.0
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
@@ -19,8 +23,6 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/aws/aws-sdk-go v1.55.5 // indirect
-	github.com/brianvoe/gofakeit/v6 v6.28.0 // indirect
 	github.com/bytedance/sonic v1.12.3 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
