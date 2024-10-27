@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
-	"online-learning-golang/cloudinary"
+	cloudinarySetup "online-learning-golang/cloudinary"
 	"online-learning-golang/models"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -119,13 +121,7 @@ func CreateUserAdmin(db *sql.DB) gin.HandlerFunc {
 // @Tags User
 // @Security BearerAuth
 // @Produce json
-// @Param email query string false "Filter by email"
-// @Param username query string false "Filter by username"
-// @Param fullName query string false "Filter by full name"
-// @Param dateOfBirth query string false "Filter by date of birth"
-// @Param role query string false "Filter by role"
-// @Param page query int false "Page number for pagination"
-// @Param limit query int false "Limit number of items per page (max 100)"
+// @Param data query models.UserQueryParams false "Filter"
 // @Success 200 {object} models.UserResponse
 // @Failure 500 {object} models.Error
 // @Router /users/ [get]
@@ -137,62 +133,66 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		var queryParams models.UserQueryParams
+		email := c.Query("email")
+		username := c.Query("username")
+		fullName := c.Query("fullName")
+		dateOfBirth := c.Query("dateOfBirth")
+		role := c.Query("role")
+		pageStr := c.Query("page")
+		limitStr := c.Query("limit")
 
-		if err := c.ShouldBindQuery(&queryParams); err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid query parameters"})
-			return
-		}
-
-		query := "SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role FROM users WHERE deleted_at IS NULL"
-		countQuery := "SELECT COUNT(*) FROM users WHERE deleted_at IS NULL"
+		query := "SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role FROM users WHERE deletedAt IS NULL"
+		countQuery := "SELECT COUNT(*) FROM users WHERE deletedAt IS NULL"
 
 		var params []interface{}
 		var countParams []interface{}
 
-		if queryParams.Email != "" {
+		if email != "" {
 			query += " AND email LIKE ?"
 			countQuery += " AND email LIKE ?"
-			params = append(params, "%"+queryParams.Email+"%")
-			countParams = append(countParams, "%"+queryParams.Email+"%")
+			params = append(params, "%"+email+"%")
+			countParams = append(countParams, "%"+email+"%")
 		}
-		if queryParams.Username != "" {
+		if username != "" {
 			query += " AND username LIKE ?"
 			countQuery += " AND username LIKE ?"
-			params = append(params, "%"+queryParams.Username+"%")
-			countParams = append(countParams, "%"+queryParams.Username+"%")
+			params = append(params, "%"+username+"%")
+			countParams = append(countParams, "%"+username+"%")
 		}
-		if queryParams.FullName != "" {
+		if fullName != "" {
 			query += " AND fullName LIKE ?"
 			countQuery += " AND fullName LIKE ?"
-			params = append(params, "%"+queryParams.FullName+"%")
-			countParams = append(countParams, "%"+queryParams.FullName+"%")
+			params = append(params, "%"+fullName+"%")
+			countParams = append(countParams, "%"+fullName+"%")
 		}
-		if queryParams.DateOfBirth != "" {
+		if dateOfBirth != "" {
 			query += " AND dateOfBirth LIKE ?"
 			countQuery += " AND dateOfBirth LIKE ?"
-			params = append(params, "%"+queryParams.DateOfBirth+"%")
-			countParams = append(countParams, "%"+queryParams.DateOfBirth+"%")
+			params = append(params, "%"+dateOfBirth+"%")
+			countParams = append(countParams, "%"+dateOfBirth+"%")
 		}
-		if queryParams.Role != "" {
+		if role != "" {
 			query += " AND role = ?"
 			countQuery += " AND role = ?"
-			params = append(params, queryParams.Role)
-			countParams = append(countParams, queryParams.Role)
+			params = append(params, role)
+			countParams = append(countParams, role)
 		}
 
-		page := queryParams.Page
-		limit := queryParams.Limit
-
-		if page == 0 {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page < 1 {
 			page = 1
 		}
-		if limit == 0 {
+
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit < 1 {
 			limit = 10
+		}
+		if limit > 100 {
+			limit = 100
 		}
 
 		var totalCount int
-		err := db.QueryRow(countQuery, countParams...).Scan(&totalCount)
+		err = db.QueryRow(countQuery, countParams...).Scan(&totalCount)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to count users"})
 			return
@@ -238,14 +238,15 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-func GetUserDetail(db *sql.DB, userId string) models.UserDetail {
-	row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role, deleted_at FROM users WHERE id = ?", userId)
+func GetUserDetail(db *sql.DB, userId string) (models.UserDetail, error) {
+	row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role FROM users WHERE id = ? AND deletedAt IS NULL", userId)
 
 	var user models.UserDetail
-	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role, &user.DeletedAt); err != nil {
-		log.Fatal("Failed to fetch user")
+	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role); err != nil {
+		return user, err
 	}
-	return user
+
+	return user, nil
 }
 
 // GetUserByID godoc
@@ -271,9 +272,9 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		user := GetUserDetail(db, userId)
-		if user.DeletedAt.Valid {
-			c.JSON(http.StatusForbidden, models.Error{Error: "Your account has been deleted"})
+		user, err := GetUserDetail(db, userId)
+		if err != nil {
+			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
 			return
 		}
 
@@ -292,6 +293,7 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 // @Param user body models.UserDetail true "User data"
 // @Success 200 {object} models.UpdateUserResponse
 // @Failure 400 {object} models.Error
+// @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
 // @Router /users/{userId} [put]
 func UpdateUser(db *sql.DB) gin.HandlerFunc {
@@ -306,23 +308,23 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 		var updateUser models.UserDetail
 
 		if err := c.ShouldBindJSON(&updateUser); err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
 			return
 		}
 
-		user := GetUserDetail(db, userId)
-		if user.DeletedAt.Valid {
-			c.JSON(http.StatusForbidden, models.Error{Error: "Your account has been deleted"})
-			return
-		}
-
-		query := "UPDATE users SET email = ?, username = ?, fullName = ?, gender = ?, dateOfBirth = ? WHERE id = ?"
+		query := "UPDATE users SET email = ?, username = ?, fullName = ?, gender = ?, dateOfBirth = ? WHERE id = ? AND deletedAt IS NULL"
 		_, err := db.Exec(query, updateUser.Email, updateUser.Username, updateUser.FullName, updateUser.Gender, updateUser.DateOfBirth, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update user"})
 			return
 		}
-		user = GetUserDetail(db, userId)
+
+		user, err := GetUserDetail(db, userId)
+		if err != nil {
+			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
+			return
+		}
 
 		c.JSON(http.StatusOK, models.UpdateUserResponse{Message: "User updated successfully", User: user})
 	}
@@ -351,11 +353,6 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 		}
 
 		userId := c.Param("userId")
-		user := GetUserDetail(db, userId)
-		if user.DeletedAt.Valid {
-			c.JSON(http.StatusForbidden, models.Error{Error: "Your account has been deleted"})
-			return
-		}
 
 		var req struct {
 			CurrentPassword string `json:"currentPassword"`
@@ -368,7 +365,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 		}
 
 		var storedPassword string
-		err := db.QueryRow("SELECT password FROM users WHERE id = ?", userId).Scan(&storedPassword)
+		err := db.QueryRow("SELECT password FROM users WHERE id = ? AND deletedAt IS NULL", userId).Scan(&storedPassword)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
@@ -390,7 +387,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		_, err = db.Exec("UPDATE users SET password = ? WHERE id = ?", hashedNewPassword, userId)
+		_, err = db.Exec("UPDATE users SET password = ? WHERE id = ? AND deletedAt IS NULL", hashedNewPassword, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update password"})
 			return
@@ -411,6 +408,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 // @Param avatar formData file true "User Avatar"
 // @Success 200 {object} models.UpdateUserResponse
 // @Failure 400 {object} models.Error
+// @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
 // @Router /users/{userId}/avatar [put]
 func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
@@ -422,11 +420,6 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 		}
 
 		userId := c.Param("userId")
-		user := GetUserDetail(db, userId)
-		if user.DeletedAt.Valid {
-			c.JSON(http.StatusForbidden, models.Error{Error: "Your account has been deleted"})
-			return
-		}
 
 		file, err := c.FormFile("avatar")
 		if err != nil {
@@ -441,24 +434,28 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 		}
 		defer fileContent.Close()
 
-		cld, err := cloudinary.SetupCloudinary()
+		cld, err := cloudinarySetup.SetupCloudinary()
 		if err != nil {
 			log.Fatalf("Error setting up Cloudinary: %v", err)
 		}
 
-		avatarURL, err := cloudinary.UploadAvatar(cld, fileContent)
+		avatarURL, err := cloudinarySetup.UploadAvatar(cld, fileContent)
 		if err != nil {
 			log.Fatalf("Error uploading avatar: %v", err)
 		}
 
-		query := "UPDATE users SET avatar = ? WHERE id = ?"
+		query := "UPDATE users SET avatar = ? WHERE id = ? AND deletedAt IS NULL"
 		_, err = db.Exec(query, avatarURL, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update avatar in database"})
 			return
 		}
 
-		user = GetUserDetail(db, userId)
+		user, err := GetUserDetail(db, userId)
+		if err != nil {
+			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
+			return
+		}
 		c.JSON(http.StatusOK, models.UpdateUserResponse{Message: "Avatar updated successfully", User: user})
 	}
 }
@@ -489,7 +486,7 @@ func DeleteUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		query := "UPDATE users SET deleted_at = NOW() WHERE id = ?"
+		query := "UPDATE users SET deletedAt = NOW() WHERE id = ?"
 		result, err := db.Exec(query, userIdToDelete)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete user"})

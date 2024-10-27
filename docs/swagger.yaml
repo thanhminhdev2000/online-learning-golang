@@ -10,6 +10,24 @@ definitions:
     - accessToken
     - expiresIn
     type: object
+  models.ClassWithSubjects:
+    properties:
+      classId:
+        type: integer
+      className:
+        type: string
+      count:
+        type: integer
+      subjects:
+        items:
+          $ref: '#/definitions/models.SubjectId'
+        type: array
+    required:
+    - classId
+    - className
+    - count
+    - subjects
+    type: object
   models.Contact:
     properties:
       content:
@@ -53,6 +71,40 @@ definitions:
     - gender
     - password
     - username
+    type: object
+  models.DocumentsResponse:
+    properties:
+      author:
+        type: string
+      category:
+        type: string
+      classId:
+        type: integer
+      documentType:
+        type: string
+      downloads:
+        type: integer
+      fileUrl:
+        type: string
+      id:
+        type: integer
+      subjectId:
+        type: integer
+      title:
+        type: string
+      views:
+        type: integer
+    required:
+    - author
+    - category
+    - classId
+    - documentType
+    - downloads
+    - fileUrl
+    - id
+    - subjectId
+    - title
+    - views
     type: object
   models.Error:
     properties:
@@ -133,6 +185,19 @@ definitions:
         type: string
     required:
     - password
+    type: object
+  models.SubjectId:
+    properties:
+      count:
+        type: integer
+      subjectId:
+        type: integer
+      subjectName:
+        type: string
+    required:
+    - count
+    - subjectId
+    - subjectName
     type: object
   models.UpdateUserResponse:
     properties:
@@ -336,7 +401,7 @@ paths:
       summary: Reset user password
       tags:
       - Authentication
-  /contact:
+  /contacts/:
     post:
       description: Send email contact
       parameters:
@@ -360,39 +425,198 @@ paths:
       summary: Send email contact
       tags:
       - Contact
+  /documents/:
+    get:
+      description: Trả về danh sách các tài liệu, có thể lọc theo `subjectId` và `title`.
+        Giới hạn số lượng tài liệu trả về bằng tham số `limit`.
+      parameters:
+      - default: 40
+        description: Giới hạn số lượng tài liệu trả về
+        in: query
+        name: limit
+        type: integer
+      - description: ID của môn học
+        in: query
+        name: subjectId
+        type: integer
+      - description: Tiêu đề của tài liệu (tìm kiếm bằng LIKE)
+        in: query
+        name: title
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.DocumentsResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Lấy danh sách tài liệu
+      tags:
+      - Document
+    post:
+      description: Upload document file
+      parameters:
+      - description: Subject ID
+        in: formData
+        name: subjectId
+        required: true
+        type: integer
+      - description: Document title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Document author
+        in: formData
+        name: author
+        type: string
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Upload document file
+      tags:
+      - Document
+  /documents/{documentId}:
+    delete:
+      description: Delete a document by document ID
+      parameters:
+      - description: Document ID
+        in: path
+        name: documentId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete document
+      tags:
+      - Document
+    put:
+      description: Update a document's information and optionally replace its file
+        by document ID
+      parameters:
+      - description: Document ID
+        in: path
+        name: documentId
+        required: true
+        type: integer
+      - description: Document title
+        in: formData
+        name: title
+        type: string
+      - description: Document author
+        in: formData
+        name: author
+        type: string
+      - description: Number of views
+        in: formData
+        name: views
+        type: integer
+      - description: Number of downloads
+        in: formData
+        name: downloads
+        type: integer
+      - description: File to replace the existing document file
+        in: formData
+        name: file
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Update a document, including replacing its file
+      tags:
+      - Document
+  /documents/subjects:
+    get:
+      description: List of classes with their subjects and document counts
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ClassWithSubjects'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: List of classes with their subjects and document counts
+      tags:
+      - Document
   /users/:
     get:
       description: Retrieve a list of all users, with optional filters for email,
         username, full name, date of birth, role, and pagination.
       parameters:
-      - description: Filter by email
-        in: query
-        name: email
-        type: string
-      - description: Filter by username
-        in: query
-        name: username
-        type: string
-      - description: Filter by full name
-        in: query
-        name: fullName
-        type: string
-      - description: Filter by date of birth
-        in: query
+      - in: query
         name: dateOfBirth
         type: string
-      - description: Filter by role
-        in: query
-        name: role
+      - in: query
+        name: email
         type: string
-      - description: Page number for pagination
-        in: query
-        name: page
-        type: integer
-      - description: Limit number of items per page (max 100)
-        in: query
+      - in: query
+        name: fullName
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
         name: limit
         type: integer
+      - in: query
+        minimum: 1
+        name: page
+        type: integer
+      - in: query
+        name: role
+        type: string
+      - in: query
+        name: username
+        type: string
       produces:
       - application/json
       responses:
@@ -520,6 +744,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
         "500":
           description: Internal Server Error
           schema:
@@ -554,6 +782,10 @@ paths:
             $ref: '#/definitions/models.UpdateUserResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/models.Error'
         "500":

@@ -211,7 +211,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/contact": {
+        "/contacts/": {
             "post": {
                 "description": "Send email contact",
                 "produces": [
@@ -248,6 +248,254 @@ const docTemplate = `{
                 }
             }
         },
+        "/documents/": {
+            "get": {
+                "description": "Trả về danh sách các tài liệu, có thể lọc theo ` + "`" + `subjectId` + "`" + ` và ` + "`" + `title` + "`" + `. Giới hạn số lượng tài liệu trả về bằng tham số ` + "`" + `limit` + "`" + `.",
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Lấy danh sách tài liệu",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 40,
+                        "description": "Giới hạn số lượng tài liệu trả về",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID của môn học",
+                        "name": "subjectId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tiêu đề của tài liệu (tìm kiếm bằng LIKE)",
+                        "name": "title",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.DocumentsResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload document file",
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Upload document file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subject ID",
+                        "name": "subjectId",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document author",
+                        "name": "author",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/subjects": {
+            "get": {
+                "description": "List of classes with their subjects and document counts",
+                "tags": [
+                    "Document"
+                ],
+                "summary": "List of classes with their subjects and document counts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ClassWithSubjects"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/{documentId}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a document's information and optionally replace its file by document ID",
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Update a document, including replacing its file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document title",
+                        "name": "title",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document author",
+                        "name": "author",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of views",
+                        "name": "views",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of downloads",
+                        "name": "downloads",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File to replace the existing document file",
+                        "name": "file",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a document by document ID",
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Delete document",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/users/": {
             "get": {
                 "security": [
@@ -266,44 +514,40 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by email",
-                        "name": "email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by username",
-                        "name": "username",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by full name",
-                        "name": "fullName",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by date of birth",
                         "name": "dateOfBirth",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Filter by role",
-                        "name": "role",
+                        "name": "email",
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "name": "fullName",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "Page number for pagination",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "Limit number of items per page (max 100)",
-                        "name": "limit",
+                        "type": "string",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "username",
                         "in": "query"
                     }
                 ],
@@ -506,6 +750,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.Error"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -603,6 +853,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.Error"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -693,6 +949,32 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ClassWithSubjects": {
+            "type": "object",
+            "required": [
+                "classId",
+                "className",
+                "count",
+                "subjects"
+            ],
+            "properties": {
+                "classId": {
+                    "type": "integer"
+                },
+                "className": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "subjects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.SubjectId"
+                    }
+                }
+            }
+        },
         "models.Contact": {
             "type": "object",
             "required": [
@@ -752,6 +1034,53 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "models.DocumentsResponse": {
+            "type": "object",
+            "required": [
+                "author",
+                "category",
+                "classId",
+                "documentType",
+                "downloads",
+                "fileUrl",
+                "id",
+                "subjectId",
+                "title",
+                "views"
+            ],
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "classId": {
+                    "type": "integer"
+                },
+                "documentType": {
+                    "type": "string"
+                },
+                "downloads": {
+                    "type": "integer"
+                },
+                "fileUrl": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "subjectId": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "views": {
+                    "type": "integer"
                 }
             }
         },
@@ -871,6 +1200,25 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 6
+                }
+            }
+        },
+        "models.SubjectId": {
+            "type": "object",
+            "required": [
+                "count",
+                "subjectId",
+                "subjectName"
+            ],
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "subjectId": {
+                    "type": "integer"
+                },
+                "subjectName": {
+                    "type": "string"
                 }
             }
         },

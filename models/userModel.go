@@ -1,10 +1,5 @@
 package models
 
-import (
-	"database/sql"
-	"time"
-)
-
 type UserRole string
 type UserGender string
 
@@ -16,13 +11,13 @@ const (
 )
 
 type UserQueryParams struct {
-	Email       string `form:"email"`
-	Username    string `form:"username"`
-	FullName    string `form:"fullName"`
-	DateOfBirth string `form:"dateOfBirth"`
-	Role        string `form:"role"`
-	Page        int    `form:"page" binding:"omitempty,min=1"`
-	Limit       int    `form:"limit" binding:"omitempty,min=1,max=100"`
+	Email       string `json:"email"`
+	Username    string `json:"username"`
+	FullName    string `json:"fullName"`
+	DateOfBirth string `json:"dateOfBirth"`
+	Role        string `json:"role"`
+	Page        int    `json:"page" binding:"omitempty,min=1"`
+	Limit       int    `json:"limit" binding:"omitempty,min=1,max=100"`
 }
 
 type CreateUserRequest struct {
@@ -49,17 +44,14 @@ type LoginResponse struct {
 }
 
 type UserDetail struct {
-	ID          int          `json:"id" validate:"required"`
-	Email       string       `json:"email" validate:"required"`
-	Username    string       `json:"username" validate:"required"`
-	FullName    string       `json:"fullName" validate:"required"`
-	Gender      UserGender   `json:"gender" validate:"required"`
-	Avatar      string       `json:"avatar" validate:"required"`
-	DateOfBirth string       `json:"dateOfBirth" validate:"required"`
-	Role        UserRole     `json:"role" validate:"required"`
-	CreatedAt   time.Time    `json:"created_at" validate:"required"`
-	UpdatedAt   time.Time    `json:"updated_at" validate:"required"`
-	DeletedAt   sql.NullTime `json:"deleted_at" validate:"required"`
+	ID          int        `json:"id" validate:"required"`
+	Email       string     `json:"email" validate:"required"`
+	Username    string     `json:"username" validate:"required"`
+	FullName    string     `json:"fullName" validate:"required"`
+	Gender      UserGender `json:"gender" validate:"required"`
+	Avatar      string     `json:"avatar" validate:"required"`
+	DateOfBirth string     `json:"dateOfBirth" validate:"required"`
+	Role        UserRole   `json:"role" validate:"required"`
 }
 
 type UserToken struct {
