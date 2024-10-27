@@ -32,6 +32,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: golang-server-container
+    env_file:
+    - .env
     ports:
       - "8080:8080"
     networks:
