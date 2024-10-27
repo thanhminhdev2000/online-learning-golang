@@ -93,10 +93,10 @@ func GetListClassesWithSubjects(db *sql.DB) gin.HandlerFunc {
 // @Param file formData file true "File to upload"
 // @Success 200 {object} models.Message
 // @Failure 500 {object} models.Error
-// @Router /documents/upload [post]
-func UploadDocument(db *sql.DB) gin.HandlerFunc {
+// @Router /documents/ [post]
+func CreateDocument(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var document models.UploadRequest
+		var document models.CreateRequest
 		if err := c.ShouldBind(&document); err != nil {
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request data"})
 			return
@@ -119,11 +119,11 @@ func UploadDocument(db *sql.DB) gin.HandlerFunc {
 		query := "INSERT INTO documents (subjectId, title, fileUrl) VALUES (?, ?, ?)"
 		_, err = db.Exec(query, document.SubjectId, document.Title, url)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to upload document"})
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to create document"})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "Upload document successful"})
+		c.JSON(http.StatusOK, models.Message{Message: "Create document successful"})
 	}
 }
 
@@ -198,11 +198,9 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 			}
 		}
 
-		// Nhận các query parameters cho subjectId và title
 		subjectIdStr := c.Query("subjectId")
 		title := c.Query("title")
 
-		// Xây dựng câu truy vấn cơ bản
 		query := `
 			SELECT 
 				d.id, 
@@ -218,7 +216,6 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 			JOIN classes c ON s.classId = c.id
 		`
 
-		// Xây dựng các điều kiện WHERE
 		var conditions []string
 		var args []interface{}
 
@@ -231,16 +228,13 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 			args = append(args, "%"+title+"%")
 		}
 
-		// Nếu có điều kiện thì thêm vào câu truy vấn
 		if len(conditions) > 0 {
 			query += " WHERE " + strings.Join(conditions, " AND ")
 		}
 
-		// Thêm phần ORDER BY và LIMIT
 		query += " ORDER BY d.views DESC LIMIT ?"
 		args = append(args, limit)
 
-		// Thực hiện câu truy vấn với các tham số
 		rows, err := db.Query(query, args...)
 		if err != nil {
 			fmt.Println(err)
@@ -264,5 +258,107 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, documents)
+	}
+}
+
+// UpdateDocument godoc
+// @Summary Update a document, including replacing its file
+// @Description Update a document's information and optionally replace its file by document ID
+// @Tags Document
+// @Security BearerAuth
+// @Param documentId path int true "Document ID"
+// @Param title formData string false "Document title"
+// @Param author formData string false "Document author"
+// @Param views formData int false "Number of views"
+// @Param downloads formData int false "Number of downloads"
+// @Param file formData file false "File to replace the existing document file"
+// @Success 200 {object} models.Message
+// @Failure 400 {object} models.Error
+// @Failure 403 {object} models.Error
+// @Failure 500 {object} models.Error
+// @Router /documents/{documentId} [put]
+func UpdateDocument(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, _ := c.Get("role")
+		if role != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this document"})
+			return
+		}
+
+		documentId := c.Param("documentId")
+		var updateFields []string
+		var args []interface{}
+
+		if title := c.PostForm("title"); title != "" {
+			updateFields = append(updateFields, "title = ?")
+			args = append(args, title)
+		}
+
+		if author := c.PostForm("author"); author != "" {
+			updateFields = append(updateFields, "author = ?")
+			args = append(args, author)
+		}
+
+		if viewsStr := c.PostForm("views"); viewsStr != "" {
+			views, err := strconv.Atoi(viewsStr)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid views parameter"})
+				return
+			}
+			updateFields = append(updateFields, "views = ?")
+			args = append(args, views)
+		}
+
+		if downloadsStr := c.PostForm("downloads"); downloadsStr != "" {
+			downloads, err := strconv.Atoi(downloadsStr)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid downloads parameter"})
+				return
+			}
+			updateFields = append(updateFields, "downloads = ?")
+			args = append(args, downloads)
+		}
+
+		file, fileHeader, err := c.Request.FormFile("file")
+		if err == nil {
+			var oldFileUrl string
+
+			query := "SELECT fileUrl FROM documents WHERE id = ?"
+			err = db.QueryRow(query, documentId).Scan(&oldFileUrl)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to retrieve existing document file"})
+				return
+			}
+
+			err = awsSetup.DeletePDF(oldFileUrl)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete old document file"})
+				return
+			}
+
+			newFileUrl, err := awsSetup.UploadPDF(file, fileHeader)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to upload new document file"})
+				return
+			}
+
+			updateFields = append(updateFields, "fileUrl = ?")
+			args = append(args, newFileUrl)
+		}
+
+		if len(updateFields) == 0 {
+			c.JSON(http.StatusBadRequest, models.Error{Error: "No fields to update"})
+			return
+		}
+
+		query := fmt.Sprintf("UPDATE documents SET %s WHERE id = ?", strings.Join(updateFields, ", "))
+		args = append(args, documentId)
+		_, err = db.Exec(query, args...)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update document"})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.Message{Message: "Document updated successfully"})
 	}
 }

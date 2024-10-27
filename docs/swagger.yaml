@@ -455,6 +455,42 @@ paths:
       summary: Lấy danh sách tài liệu
       tags:
       - Document
+    post:
+      description: Upload document file
+      parameters:
+      - description: Subject ID
+        in: formData
+        name: subjectId
+        required: true
+        type: integer
+      - description: Document title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Document author
+        in: formData
+        name: author
+        type: string
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Upload document file
+      tags:
+      - Document
   /documents/{documentId}:
     delete:
       description: Delete a document by document ID
@@ -478,6 +514,57 @@ paths:
       summary: Delete document
       tags:
       - Document
+    put:
+      description: Update a document's information and optionally replace its file
+        by document ID
+      parameters:
+      - description: Document ID
+        in: path
+        name: documentId
+        required: true
+        type: integer
+      - description: Document title
+        in: formData
+        name: title
+        type: string
+      - description: Document author
+        in: formData
+        name: author
+        type: string
+      - description: Number of views
+        in: formData
+        name: views
+        type: integer
+      - description: Number of downloads
+        in: formData
+        name: downloads
+        type: integer
+      - description: File to replace the existing document file
+        in: formData
+        name: file
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Update a document, including replacing its file
+      tags:
+      - Document
   /documents/subjects:
     get:
       description: List of classes with their subjects and document counts
@@ -493,44 +580,6 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: List of classes with their subjects and document counts
-      tags:
-      - Document
-  /documents/upload:
-    post:
-      description: Upload document file
-      parameters:
-      - description: Subject ID
-        in: formData
-        name: subjectId
-        required: true
-        type: integer
-      - description: Document title
-        in: formData
-        name: title
-        required: true
-        type: string
-      - description: Document author
-        in: formData
-        name: author
-        required: true
-        type: string
-      - description: File to upload
-        in: formData
-        name: file
-        required: true
-        type: file
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Message'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.Error'
-      security:
-      - BearerAuth: []
-      summary: Upload document file
       tags:
       - Document
   /users/:

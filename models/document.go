@@ -37,7 +37,7 @@ type SubjectId struct {
 	Count       int    `json:"count" validate:"required"`
 }
 
-type UploadRequest struct {
+type CreateRequest struct {
 	SubjectId int                   `form:"subjectId" validate:"required" json:"subjectId"`
 	Title     string                `form:"title" validate:"required" json:"title"`
 	Author    string                `json:"author"`

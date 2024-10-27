@@ -299,35 +299,7 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/documents/subjects": {
-            "get": {
-                "description": "List of classes with their subjects and document counts",
-                "tags": [
-                    "Document"
-                ],
-                "summary": "List of classes with their subjects and document counts",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.ClassWithSubjects"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/documents/upload": {
+            },
             "post": {
                 "security": [
                     {
@@ -358,8 +330,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Document author",
                         "name": "author",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "file",
@@ -385,7 +356,110 @@ const docTemplate = `{
                 }
             }
         },
+        "/documents/subjects": {
+            "get": {
+                "description": "List of classes with their subjects and document counts",
+                "tags": [
+                    "Document"
+                ],
+                "summary": "List of classes with their subjects and document counts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ClassWithSubjects"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/documents/{documentId}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a document's information and optionally replace its file by document ID",
+                "tags": [
+                    "Document"
+                ],
+                "summary": "Update a document, including replacing its file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Document ID",
+                        "name": "documentId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document title",
+                        "name": "title",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document author",
+                        "name": "author",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of views",
+                        "name": "views",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of downloads",
+                        "name": "downloads",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File to replace the existing document file",
+                        "name": "file",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
