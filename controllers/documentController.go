@@ -203,7 +203,9 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 
 		query := `
 			SELECT 
-				d.id, 
+				d.id,
+				c.id,
+				s.id, 
 				CONCAT(s.name, ' - ', c.name) AS category, 
 				d.title, 
 				d.fileUrl, 
@@ -246,7 +248,7 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 		var documents []models.DocumentsResponse
 		for rows.Next() {
 			var doc models.DocumentsResponse
-			if err := rows.Scan(&doc.ID, &doc.Category, &doc.Title, &doc.FileUrl, &doc.DocumentType, &doc.Views, &doc.Downloads, &doc.Author); err != nil {
+			if err := rows.Scan(&doc.ID, &doc.ClassId, &doc.SubjectId, &doc.Category, &doc.Title, &doc.FileUrl, &doc.DocumentType, &doc.Views, &doc.Downloads, &doc.Author); err != nil {
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to parse document data"})
 				return
 			}

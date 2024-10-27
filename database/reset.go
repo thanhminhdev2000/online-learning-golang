@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/brianvoe/gofakeit/v6"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -152,19 +153,32 @@ func CreateDocumentsTable(db *sql.DB) error {
 func InsertTestAccounts(db *sql.DB) error {
 	query := `
 	INSERT INTO users (email, username, fullName, password, gender, dateOfBirth, role)
-	VALUES (?, ?, ?, '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', 'male', '1999-09-09', ?)
+	VALUES (?, ?, ?, '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', ?, ?, ?)
 	`
 
-	for index := 1; index < 10; index++ {
-		role := "user"
-		fullName := "User Name"
-		if index%2 == 1 {
+	gofakeit.Seed(0)
+
+	for index := 1; index <= 100; index++ {
+		var role string
+		var gender string
+		if index <= 10 {
 			role = "admin"
-			fullName = "Admin Name"
+		} else {
+			role = "user"
+		}
+
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+		random := rnd.Intn(10)
+		if random%2 == 0 {
+			gender = "male"
+		} else {
+			gender = "female"
 		}
 
 		IdStr := strconv.Itoa(index)
-		_, err := db.Exec(query, role+IdStr+"@gmail.com", role+IdStr, fullName+" "+IdStr, role)
+		minDate := time.Now().AddDate(-50, 0, 0)
+		maxDate := time.Now().AddDate(-12, 0, 0)
+		_, err := db.Exec(query, gofakeit.Email(), role+IdStr, gofakeit.Name(), gender, gofakeit.DateRange(minDate, maxDate), role)
 
 		if err != nil {
 			return fmt.Errorf("failed to insert document")

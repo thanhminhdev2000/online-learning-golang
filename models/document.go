@@ -46,6 +46,8 @@ type CreateRequest struct {
 
 type DocumentsResponse struct {
 	ID           int    `json:"id" validate:"required"`
+	ClassId      int    `json:"classId" validate:"required"`
+	SubjectId    int    `json:"subjectId" validate:"required"`
 	Category     string `json:"category" validate:"required"`
 	Title        string `json:"title" validate:"required"`
 	FileUrl      string `json:"fileUrl" validate:"required"`

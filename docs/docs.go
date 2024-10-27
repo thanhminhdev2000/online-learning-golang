@@ -1042,10 +1042,12 @@ const docTemplate = `{
             "required": [
                 "author",
                 "category",
+                "classId",
                 "documentType",
                 "downloads",
                 "fileUrl",
                 "id",
+                "subjectId",
                 "title",
                 "views"
             ],
@@ -1055,6 +1057,9 @@ const docTemplate = `{
                 },
                 "category": {
                     "type": "string"
+                },
+                "classId": {
+                    "type": "integer"
                 },
                 "documentType": {
                     "type": "string"
@@ -1066,6 +1071,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "subjectId": {
                     "type": "integer"
                 },
                 "title": {

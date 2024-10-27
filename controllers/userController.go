@@ -7,6 +7,7 @@ import (
 	"net/http"
 	cloudinarySetup "online-learning-golang/cloudinary"
 	"online-learning-golang/models"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -132,12 +133,13 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		var queryParams models.UserQueryParams
-
-		if err := c.ShouldBindQuery(&queryParams); err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid query parameters"})
-			return
-		}
+		email := c.Query("email")
+		username := c.Query("username")
+		fullName := c.Query("fullName")
+		dateOfBirth := c.Query("dateOfBirth")
+		role := c.Query("role")
+		pageStr := c.Query("page")
+		limitStr := c.Query("limit")
 
 		query := "SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role FROM users WHERE deletedAt IS NULL"
 		countQuery := "SELECT COUNT(*) FROM users WHERE deletedAt IS NULL"
@@ -145,49 +147,52 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 		var params []interface{}
 		var countParams []interface{}
 
-		if queryParams.Email != "" {
+		if email != "" {
 			query += " AND email LIKE ?"
 			countQuery += " AND email LIKE ?"
-			params = append(params, "%"+queryParams.Email+"%")
-			countParams = append(countParams, "%"+queryParams.Email+"%")
+			params = append(params, "%"+email+"%")
+			countParams = append(countParams, "%"+email+"%")
 		}
-		if queryParams.Username != "" {
+		if username != "" {
 			query += " AND username LIKE ?"
 			countQuery += " AND username LIKE ?"
-			params = append(params, "%"+queryParams.Username+"%")
-			countParams = append(countParams, "%"+queryParams.Username+"%")
+			params = append(params, "%"+username+"%")
+			countParams = append(countParams, "%"+username+"%")
 		}
-		if queryParams.FullName != "" {
+		if fullName != "" {
 			query += " AND fullName LIKE ?"
 			countQuery += " AND fullName LIKE ?"
-			params = append(params, "%"+queryParams.FullName+"%")
-			countParams = append(countParams, "%"+queryParams.FullName+"%")
+			params = append(params, "%"+fullName+"%")
+			countParams = append(countParams, "%"+fullName+"%")
 		}
-		if queryParams.DateOfBirth != "" {
+		if dateOfBirth != "" {
 			query += " AND dateOfBirth LIKE ?"
 			countQuery += " AND dateOfBirth LIKE ?"
-			params = append(params, "%"+queryParams.DateOfBirth+"%")
-			countParams = append(countParams, "%"+queryParams.DateOfBirth+"%")
+			params = append(params, "%"+dateOfBirth+"%")
+			countParams = append(countParams, "%"+dateOfBirth+"%")
 		}
-		if queryParams.Role != "" {
+		if role != "" {
 			query += " AND role = ?"
 			countQuery += " AND role = ?"
-			params = append(params, queryParams.Role)
-			countParams = append(countParams, queryParams.Role)
+			params = append(params, role)
+			countParams = append(countParams, role)
 		}
 
-		page := queryParams.Page
-		limit := queryParams.Limit
-
-		if page == 0 {
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page < 1 {
 			page = 1
 		}
-		if limit == 0 {
+
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil || limit < 1 {
 			limit = 10
+		}
+		if limit > 100 {
+			limit = 100
 		}
 
 		var totalCount int
-		err := db.QueryRow(countQuery, countParams...).Scan(&totalCount)
+		err = db.QueryRow(countQuery, countParams...).Scan(&totalCount)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to count users"})
 			return
