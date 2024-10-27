@@ -28,11 +28,11 @@ func CreateToken(userId int, role string, expirationTime time.Duration) (string,
 }
 
 func CreateAccessToken(userId int, role string) (string, int64, error) {
-	return CreateToken(userId, role, 1*time.Hour)
+	return CreateToken(userId, role, 24*time.Hour)
 }
 
 func CreateRefreshToken(userId int, role string) (string, int64, error) {
-	return CreateToken(userId, role, 7*24*time.Hour)
+	return CreateToken(userId, role, 30*24*time.Hour)
 }
 
 func ValidToken(tokenString string) (int, string, error) {

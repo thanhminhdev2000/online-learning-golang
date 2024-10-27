@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 
@@ -180,7 +181,7 @@ func InsertTestAccounts(db *sql.DB) error {
 
 func InsertClassesData(db *sql.DB) error {
 	classes := []string{
-		"Đề thi thử đại học", "Lớp 12", "Lớp 11", "Lớp 10", "Thi vào lớp 10",
+		"Đề thi thử đại học", "Lớp 12", "Lớp 11", "Lớp 10",
 		"Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6",
 	}
 
@@ -204,7 +205,7 @@ func InsertSubjectsData(db *sql.DB) error {
 	queryInsertSubject := `INSERT INTO subjects (classId, name) VALUES (?, ?)`
 
 	classes := []string{
-		"Đề thi thử đại học", "Lớp 12", "Lớp 11", "Lớp 10", "Thi vào lớp 10",
+		"Đề thi thử đại học", "Lớp 12", "Lớp 11", "Lớp 10",
 		"Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6",
 	}
 
@@ -229,18 +230,128 @@ func InsertSubjectsData(db *sql.DB) error {
 type Upload struct {
 	SubjectId int
 	Title     string
-	FileUrl   string
 }
 
 func InsertDocumentsData(db *sql.DB) error {
 	query := `INSERT INTO documents (subjectId, title, fileUrl, views, downloads) VALUES (?, ?, ?, ?, ?)`
+	awsStorage := os.Getenv("AWS_STORAGE")
 
 	data := []Upload{
-		{1, "Đề thi thử môn Toán tỉnh Bắc Ninh", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Bắc Ninh.pdf"},
-		{1, "Đề thi thử môn Toán tỉnh Nghệ An", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Nghệ An.pdf"},
-		{1, "Đề thi thử môn Toán tỉnh Phú Yên", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Phú Yên.pdf"},
-		{1, "Đề thi thử môn Toán tỉnh Quảng Trị", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Quảng Trị.pdf"},
-		{1, "Đề thi thử môn Toán tỉnh Thanh Hoá", "https://online-learning-aws.s3.us-east-1.amazonaws.com/pdfs/Đề thi thử môn Toán tỉnh Thanh Hoá.pdf"},
+		{1, "Đề thi thử môn Toán tỉnh Bắc Ninh"},
+		{1, "Đề thi thử môn Toán tỉnh Nghệ An"},
+		{1, "Đề thi thử môn Toán tỉnh Phú Yên"},
+		{1, "Đề thi thử môn Toán tỉnh Quảng Trị"},
+		{1, "Đề thi thử môn Toán tỉnh Thanh Hoá"},
+
+		{2, "Đề thi thử môn Văn tỉnh Bắc Ninh"},
+		{2, "Đề thi thử môn Văn tỉnh Hà Nội"},
+		{2, "Đề thi thử môn Văn tỉnh Hải Dương"},
+		{2, "Đề thi thử môn Văn tỉnh Kon Tum"},
+		{2, "Đề thi thử môn Văn tỉnh Nghệ An"},
+		{2, "Đề thi thử môn Văn tỉnh Vĩnh Phúc"},
+
+		{3, "Đề thi thử môn Tiếng Anh tỉnh Bình Định"},
+		{3, "Đề thi thử môn Tiếng Anh tỉnh Hà Nội"},
+		{3, "Đề thi thử môn Tiếng Anh tỉnh Hoà Bình"},
+		{3, "Đề thi thử môn Tiếng Anh tỉnh Quảng Nam"},
+		{3, "Đề thi thử môn Tiếng Anh tỉnh Quảng Ninh"},
+		{3, "Đề thi thử môn Tiếng Anh tỉnh Thái Nguyên"},
+		{3, "Đề thi thử môn Tiếng Anh tỉnh Thanh Hoá"},
+
+		{4, "Đề thi giữa kỳ lớp 12 môn Toán trường THPT Ngô Thời Nhiệm"},
+		{4, "Đề thi giữa kỳ lớp 12 môn Toán trường THPT Nguyễn Thái Học"},
+		{4, "Đề thi giữa kỳ lớp 12 môn Toán trường THPT Yên Hoà"},
+		{4, "Đề thi KSCL lớp 12 môn Toán trường THPT Đoàn Kết"},
+		{4, "Đề thi KSCL lớp 12 môn Toán trường THPT Đông Đậu"},
+		{4, "Đề thi KSCL lớp 12 môn Toán trường THPT Nguyễn Khuyến"},
+
+		{5, "Đề kiểm tra HKI lớp 12 môn Văn tỉnh Đồng Tháp"},
+		{5, "Đề kiểm tra HKII lớp 12 môn Văn tỉnh Hà Nội"},
+		{5, "Đề kiểm tra HKII lớp 12 môn Văn tỉnh Hà Tĩnh"},
+		{5, "Đề kiểm tra HKII lớp 12 môn Văn tỉnh Thái Nguyên"},
+
+		{6, "20 chuyên đề ngữ pháp Tiếng Anh ôn thi"},
+		{6, "3000 từ vựng tiếng Anh thông dụng"},
+		{6, "Đề thi thử THPT QG 2019 môn Tiếng Anh tỉnh Vĩnh Phúc"},
+		{6, "Một số cấu trúc viết lại câu"},
+		{6, "Từ vựng SGK lớp 12"},
+
+		{7, "Đề kiểm tra Đại số chương 1"},
+		{7, "Đề kiểm tra Đại số chương 2"},
+		{7, "Đề kiểm tra Đại số chương 3"},
+		{7, "Đề kiểm tra Hình học chương 1"},
+		{7, "Đề kiểm tra Hình học chương 2"},
+
+		{8, "Đề thi HKII lớp 11 môn Ngữ văn tỉnh Hà Nam"},
+		{8, "Đề thi HKII lớp 11 môn Ngữ văn tỉnh Hà Nội"},
+		{8, "Đề thi HKII lớp 11 môn Ngữ văn tỉnh Thái Bình"},
+
+		{9, "Đề cương ôn thi HKII"},
+		{9, "Tổng hợp từ vựng Unit 9+10+11"},
+
+		{10, "Lời giải đề KT HKI - Bứt phá 9+ môn Toán"},
+		{10, "Lời giải đề KT HKII - Bứt phá 9+ môn Toán"},
+
+		{11, "7 dạng đề nghị luận thường gặp"},
+		{11, "Kiến thức quan trọng Ngữ văn lớp 9"},
+
+		{12, "Bài tập trắc nghiệm Tiếng Anh"},
+		{12, "Lấy lại gốc tiếng Anh - 12 thì của động từ"},
+		{12, "Tổng hợp bài tập Tiếng Anh lớp 10"},
+
+		{13, "46 đề Toán tự luyện thi vào lớp 10"},
+		{13, "Bộ đề thi giữa học kì 1 môn Toán lớp 9"},
+		{13, "Chuyên đề rút gọn biểu thức"},
+		{13, "Đề thi giữa học kỳ I môn Toán 9 (có đáp án)"},
+
+		{14, "22 bài văn mẫu lớp 9"},
+		{14, "Mùa xuân nho nhỏ"},
+		{14, "Viếng lăng Bác"},
+
+		{15, "Cách sử dụng câu điều kiện loại I"},
+		{15, "Cách sử dụng câu điều kiện loại II"},
+		{15, "Cách sử dụng câu điều kiện loại II"},
+		{15, "Đề thi giữa kỳ HKI môn tiếng Anh lớp 9"},
+		{15, "Mẹo làm bài tập dạng đặt câu hỏi với từ"},
+		{15, "200 câu trắc nghiệm tiếng Anh lớp 9 có đáp án"},
+
+		{16, "Các trường hợp đồng dạng của tam giác vuông"},
+		{16, "Hệ thống kiến thức trọng tâm môn Toán 8"},
+
+		{17, "Miêu tả và biểu cảm trong văn bản tự sự"},
+		{17, "Phương pháp làm bài văn nghị luận"},
+		{17, "Tính thống nhất về chủ đề của văn bản"},
+		{17, "Tuyển tập những bài văn mẫu hay lớp 8"},
+		{17, "Xây dựng đoạn văn trong văn bản"},
+
+		{18, "Bài tập trắc nghiệm tiếng anh lớp 8"},
+		{18, "Đề thi  tiếng Anh HKI"},
+		{18, "Unit 10 - Communication"},
+
+		{19, "30 đề thi học sinh giỏi toán lớp 7 có đáp án"},
+		{19, "Chuyên đề về luỹ thừa số hữu tỉ"},
+		{19, "Tổng hợp kiến thức quan trọng môn Toán lớp 7"},
+
+		{20, "Ôn tập văn nghị luận Ngữ văn lớp 7"},
+		{20, "Tìm hiểu chung về văn bản hành chính"},
+		{20, "Tình yêu nước của nhân dân ta"},
+
+		{21, "130 câu trắc nghiệm tiếng Anh lớp 7"},
+		{21, "Bài tập ôn hè môn tiếng Anh lớp 7"},
+		{21, "Đề thi khảo sát chất lượng đầu năm môn tiếng Anh lớp 7"},
+
+		{22, "Bộ đề kiểm tra 15 phút chương 1 Số học lớp 6"},
+		{22, "Bộ đề kiểm tra 15 phút chương 2 Số học lớp 6"},
+		{22, "Tổng hợp kiến thức môn Toán lớp 6"},
+		{22, "Đề thi khảo sát chất lượng đầu năm môn Toán lớp 6"},
+		{22, "40 đề kiểm tra khảo sát chất lượng đầu năm môn Toán 6"},
+
+		{23, "Đoạn văn tự giới thiệu về bản thân"},
+		{23, "Tả cảnh buổi sáng mùa xuân trên quê hương"},
+
+		{24, "185 câu chia động từ tiếng Anh lớp 6-7"},
+		{24, "Bài tập thì hiện tại đơn & hiện tại tiếp diễn"},
+		{24, "Văn mẫu về tác hại của việc chơi game"},
 	}
 
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -248,7 +359,7 @@ func InsertDocumentsData(db *sql.DB) error {
 		views := rnd.Intn(5000) + 1500
 		downloads := rnd.Intn(1000) + 200
 
-		_, err := db.Exec(query, row.SubjectId, row.Title, row.FileUrl, views, downloads)
+		_, err := db.Exec(query, row.SubjectId, row.Title, awsStorage+"pdfs/"+row.Title+".pdf", views, downloads)
 		if err != nil {
 			return fmt.Errorf("failed to insert class %s: %w", row.Title, err)
 		}
