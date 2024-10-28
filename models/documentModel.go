@@ -15,9 +15,9 @@ type Subject struct {
 
 type Document struct {
 	ID           int    `json:"id" validate:"required"`
-	SubjectId    int    `json:"subjectId" validate:"required"`
+	SubjectID    int    `json:"subjectId" validate:"required"`
 	Title        string `json:"title" validate:"required"`
-	FileUrl      string `json:"fileUrl" validate:"required"`
+	FileURL      string `json:"fileUrl" validate:"required"`
 	DocumentType string `json:"documentType" validate:"required"`
 	Views        int    `json:"views" validate:"required"`
 	Downloads    int    `json:"downloads" validate:"required"`
@@ -25,20 +25,20 @@ type Document struct {
 }
 
 type ClassWithSubjects struct {
-	ClassId   int         `json:"classId" validate:"required"`
+	ClassID   int         `json:"classId" validate:"required"`
 	ClassName string      `json:"className" validate:"required"`
 	Count     int         `json:"count" validate:"required"`
 	Subjects  []SubjectId `json:"subjects" validate:"required"`
 }
 
 type SubjectId struct {
-	SubjectId   int    `json:"subjectId" validate:"required"`
+	SubjectID   int    `json:"subjectId" validate:"required"`
 	SubjectName string `json:"subjectName" validate:"required"`
 	Count       int    `json:"count" validate:"required"`
 }
 
 type CreateRequest struct {
-	SubjectId int                   `form:"subjectId" validate:"required" json:"subjectId"`
+	SubjectID int                   `form:"subjectId" validate:"required" json:"subjectId"`
 	Title     string                `form:"title" validate:"required" json:"title"`
 	Author    string                `json:"author"`
 	File      *multipart.FileHeader `form:"file" swaggerignore:"true" validate:"required" `
@@ -46,11 +46,11 @@ type CreateRequest struct {
 
 type DocumentsResponse struct {
 	ID           int    `json:"id" validate:"required"`
-	ClassId      int    `json:"classId" validate:"required"`
-	SubjectId    int    `json:"subjectId" validate:"required"`
+	ClassID      int    `json:"classId" validate:"required"`
+	SubjectID    int    `json:"subjectId" validate:"required"`
 	Category     string `json:"category" validate:"required"`
 	Title        string `json:"title" validate:"required"`
-	FileUrl      string `json:"fileUrl" validate:"required"`
+	FileURL      string `json:"fileUrl" validate:"required"`
 	DocumentType string `json:"documentType" validate:"required"`
 	Views        int    `json:"views" validate:"required"`
 	Downloads    int    `json:"downloads" validate:"required"`

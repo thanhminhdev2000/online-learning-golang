@@ -59,6 +59,33 @@ func DropClassesTable(db *sql.DB) error {
 	return nil
 }
 
+func DropCoursesTable(db *sql.DB) error {
+	query := `DROP TABLE IF EXISTS courses;`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to drop courses table: %w", err)
+	}
+	return nil
+}
+
+func DropLessonsTable(db *sql.DB) error {
+	query := `DROP TABLE IF EXISTS lessons;`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to drop lessons table: %w", err)
+	}
+	return nil
+}
+
+func DropPurchasesTable(db *sql.DB) error {
+	query := `DROP TABLE IF EXISTS purchases;`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to drop purchases table: %w", err)
+	}
+	return nil
+}
+
 func CreateUsersTable(db *sql.DB) error {
 	query := `
     CREATE TABLE IF NOT EXISTS users (
@@ -72,6 +99,7 @@ func CreateUsersTable(db *sql.DB) error {
         dateOfBirth DATE NOT NULL,
         role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         deletedAt TIMESTAMP NULL DEFAULT NULL
     );`
 	_, err := db.Exec(query)
@@ -88,6 +116,7 @@ func CreateResetPasswordTokensTable(db *sql.DB) error {
 		userId INT NOT NULL,
 		expiry TIMESTAMP NOT NULL,
 		createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
 	);`
 
@@ -104,7 +133,8 @@ func CreateClassesTable(db *sql.DB) error {
     CREATE TABLE IF NOT EXISTS classes (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );`
 	_, err := db.Exec(query)
 	if err != nil {
@@ -120,6 +150,7 @@ func CreateSubjectsTable(db *sql.DB) error {
         classId INT NOT NULL,
         name VARCHAR(255) NOT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (classId) REFERENCES classes(id) ON DELETE CASCADE
     );`
 	_, err := db.Exec(query)
@@ -141,11 +172,65 @@ func CreateDocumentsTable(db *sql.DB) error {
         downloads INT DEFAULT 0,
 		author VARCHAR(255) DEFAULT "admin",
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE
     );`
 	_, err := db.Exec(query)
 	if err != nil {
 		return fmt.Errorf("failed to create documents table: %w", err)
+	}
+	return nil
+}
+
+func CreateCoursesTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS courses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        subjectId INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        price DECIMAL(10, 2) NOT NULL,
+        instructor VARCHAR(255),
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (subjectId) REFERENCES subjects(id) ON DELETE CASCADE
+    );`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to create courses table: %w", err)
+	}
+	return nil
+}
+
+func CreateLessonsTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS lessons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        courseId INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        videoUrl VARCHAR(255) NOT NULL,
+        FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
+    );`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to create lessons table: %w", err)
+	}
+	return nil
+}
+
+func CreatePurchasesTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS purchases (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId INT NOT NULL,
+        courseId INT NOT NULL,
+        purchaseDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
+    );`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to create purchases table: %w", err)
 	}
 	return nil
 }
@@ -385,15 +470,29 @@ func InsertDocumentsData(db *sql.DB) error {
 func ResetDataBase(db *sql.DB) {
 	DropResetPasswordTokensTable(db)
 	DropUsersTable(db)
+
 	DropDocumentsTable(db)
 	DropSubjectsTable(db)
 	DropClassesTable(db)
 
+	DropPurchasesTable(db)
+	DropLessonsTable(db)
+	DropCoursesTable(db)
+
+	// ----------------
+
 	CreateUsersTable(db)
 	CreateResetPasswordTokensTable(db)
+
 	CreateClassesTable(db)
 	CreateSubjectsTable(db)
 	CreateDocumentsTable(db)
+
+	CreateCoursesTable(db)
+	CreateLessonsTable(db)
+	CreatePurchasesTable(db)
+
+	// ----------------
 
 	InsertTestAccounts(db)
 	InsertClassesData(db)

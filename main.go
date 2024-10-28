@@ -70,6 +70,8 @@ func main() {
 	routes.AuthRoutes(router.Group(apiPrefix+"/auth"), db)
 	routes.ContactRoutes(router.Group(apiPrefix+"/contacts"), db)
 	routes.DocumentRoutes(router.Group(apiPrefix+"/documents"), db)
+	routes.CourseRoutes(router.Group(apiPrefix+"/courses"), db)
+	routes.LessonRoutes(router.Group(apiPrefix+"/lessons"), db)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

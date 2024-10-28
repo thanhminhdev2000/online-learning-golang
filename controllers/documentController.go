@@ -30,7 +30,7 @@ func GetClassesWithSubjects(db *sql.DB) ([]models.ClassWithSubjects, error) {
 
 	for rows.Next() {
 		var class models.ClassWithSubjects
-		if err := rows.Scan(&class.ClassId, &class.ClassName, &class.Count); err != nil {
+		if err := rows.Scan(&class.ClassID, &class.ClassName, &class.Count); err != nil {
 			return nil, err
 		}
 
@@ -41,16 +41,16 @@ func GetClassesWithSubjects(db *sql.DB) ([]models.ClassWithSubjects, error) {
             WHERE s.classId = ?
             GROUP BY s.id;
         `
-		subjectRows, err := db.Query(subjectQuery, class.ClassId)
+		subjectRows, err := db.Query(subjectQuery, class.ClassID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get subjects for classId %d: %w", class.ClassId, err)
+			return nil, fmt.Errorf("failed to get subjects for classId %d: %w", class.ClassID, err)
 		}
 		defer subjectRows.Close()
 
 		var subjects []models.SubjectId
 		for subjectRows.Next() {
 			var subject models.SubjectId
-			if err := subjectRows.Scan(&subject.SubjectId, &subject.SubjectName, &subject.Count); err != nil {
+			if err := subjectRows.Scan(&subject.SubjectID, &subject.SubjectName, &subject.Count); err != nil {
 				return nil, err
 			}
 			subjects = append(subjects, subject)
@@ -104,7 +104,7 @@ func CreateDocument(db *sql.DB) gin.HandlerFunc {
 
 		file, fileHeader, err := c.Request.FormFile("file")
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file upload"})
+			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid file upload"})
 			return
 		}
 		defer file.Close()
@@ -112,12 +112,12 @@ func CreateDocument(db *sql.DB) gin.HandlerFunc {
 		url, err := awsSetup.UploadPDF(file, fileHeader)
 		if err != nil {
 			fmt.Println(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file"})
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to upload file"})
 			return
 		}
 
 		query := "INSERT INTO documents (subjectId, title, fileUrl) VALUES (?, ?, ?)"
-		_, err = db.Exec(query, document.SubjectId, document.Title, url)
+		_, err = db.Exec(query, document.SubjectID, document.Title, url)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to create document"})
 			return
@@ -140,7 +140,7 @@ func DeleteDocument(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, _ := c.Get("role")
 		if role != "admin" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this document"})
+			c.JSON(http.StatusForbidden, models.Error{Error: "You do not have permission to delete this document"})
 			return
 		}
 
@@ -173,12 +173,12 @@ func DeleteDocument(db *sql.DB) gin.HandlerFunc {
 }
 
 // GetDocuments godoc
-// @Summary Lấy danh sách tài liệu
-// @Description Trả về danh sách các tài liệu, có thể lọc theo `subjectId` và `title`. Giới hạn số lượng tài liệu trả về bằng tham số `limit`.
+// @Summary Retrieve document list
+// @Description Returns a list of documents, which can be filtered by `subjectId` and `title`. Limits the number of returned documents using the `limit` parameter.
 // @Tags Document
-// @Param limit query int false "Giới hạn số lượng tài liệu trả về" default(40) max(100)
-// @Param subjectId query int false "ID của môn học"
-// @Param title query string false "Tiêu đề của tài liệu (tìm kiếm bằng LIKE)"
+// @Param limit query int false "Limit the number of documents returned" default(40) max(100)
+// @Param subjectId query int false "Subject ID"
+// @Param title query string false "Document title (searched using LIKE)"
 // @Success 200 {array} models.DocumentsResponse
 // @Failure 400 {object} models.Error
 // @Failure 500 {object} models.Error
@@ -249,7 +249,7 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 		var documents []models.DocumentsResponse
 		for rows.Next() {
 			var doc models.DocumentsResponse
-			if err := rows.Scan(&doc.ID, &doc.ClassId, &doc.SubjectId, &doc.Category, &doc.Title, &doc.FileUrl, &doc.DocumentType, &doc.Views, &doc.Downloads, &doc.Author); err != nil {
+			if err := rows.Scan(&doc.ID, &doc.ClassID, &doc.SubjectID, &doc.Category, &doc.Title, &doc.FileURL, &doc.DocumentType, &doc.Views, &doc.Downloads, &doc.Author); err != nil {
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to parse document data"})
 				return
 			}
@@ -284,7 +284,7 @@ func UpdateDocument(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, _ := c.Get("role")
 		if role != "admin" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this document"})
+			c.JSON(http.StatusForbidden, models.Error{Error: "You do not have permission to update this document"})
 			return
 		}
 

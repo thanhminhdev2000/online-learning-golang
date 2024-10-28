@@ -44,6 +44,42 @@ definitions:
     - fullName
     - title
     type: object
+  models.Course:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      instructor:
+        type: string
+      price:
+        type: number
+      subjectId:
+        type: integer
+      title:
+        type: string
+    required:
+    - price
+    - subjectId
+    - title
+    type: object
+  models.CreateCourseRequest:
+    properties:
+      description:
+        type: string
+      instructor:
+        type: string
+      price:
+        type: number
+      subjectId:
+        type: integer
+      title:
+        type: string
+    required:
+    - price
+    - subjectId
+    - title
+    type: object
   models.CreateUserRequest:
     properties:
       avatar:
@@ -119,6 +155,17 @@ definitions:
         type: string
     required:
     - email
+    type: object
+  models.Lesson:
+    properties:
+      courseId:
+        type: integer
+      id:
+        type: integer
+      title:
+        type: string
+      videoUrl:
+        type: string
     type: object
   models.LoginRequest:
     properties:
@@ -198,6 +245,17 @@ definitions:
     - count
     - subjectId
     - subjectName
+    type: object
+  models.UpdateCourseRequest:
+    properties:
+      description:
+        type: string
+      instructor:
+        type: string
+      price:
+        type: number
+      title:
+        type: string
     type: object
   models.UpdateUserResponse:
     properties:
@@ -425,21 +483,155 @@ paths:
       summary: Send email contact
       tags:
       - Contact
-  /documents/:
+  /courses/:
     get:
-      description: Trả về danh sách các tài liệu, có thể lọc theo `subjectId` và `title`.
-        Giới hạn số lượng tài liệu trả về bằng tham số `limit`.
+      description: Retrieve details of all available courses with pagination support
       parameters:
-      - default: 40
-        description: Giới hạn số lượng tài liệu trả về
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Number of courses per page
         in: query
         name: limit
         type: integer
-      - description: ID của môn học
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Course'
+            type: array
+        "400":
+          description: Invalid pagination parameters
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Failed to retrieve courses
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get a list of courses with pagination
+      tags:
+      - Course
+    post:
+      description: Create a new course under a specific subject
+      parameters:
+      - description: Course data
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateCourseRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Create a new course
+      tags:
+      - Course
+  /courses/{courseId}:
+    delete:
+      description: Delete a course by its ID
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "500":
+          description: Failed to delete course
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete a course
+      tags:
+      - Course
+    get:
+      description: Retrieve details of a specific course by its ID
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Course'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Failed to retrieve course
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get a course by ID
+      tags:
+      - Course
+    put:
+      description: Update course details like title, description, price, or instructor
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Course data
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateCourseRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Failed to update course
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Update a course
+      tags:
+      - Course
+  /documents/:
+    get:
+      description: Returns a list of documents, which can be filtered by `subjectId`
+        and `title`. Limits the number of returned documents using the `limit` parameter.
+      parameters:
+      - default: 40
+        description: Limit the number of documents returned
+        in: query
+        name: limit
+        type: integer
+      - description: Subject ID
         in: query
         name: subjectId
         type: integer
-      - description: Tiêu đề của tài liệu (tìm kiếm bằng LIKE)
+      - description: Document title (searched using LIKE)
         in: query
         name: title
         type: string
@@ -458,7 +650,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.Error'
-      summary: Lấy danh sách tài liệu
+      summary: Retrieve document list
       tags:
       - Document
     post:
@@ -588,6 +780,168 @@ paths:
       summary: List of classes with their subjects and document counts
       tags:
       - Document
+  /lessons:
+    get:
+      description: Retrieve a paginated list of lessons
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Number of lessons per page
+        in: query
+        name: limit
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Lesson'
+            type: array
+        "400":
+          description: Invalid pagination parameters
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Failed to retrieve lessons
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Get a list of lessons with pagination
+      tags:
+      - Lesson
+  /lessons/:
+    post:
+      description: Upload a video for a lesson and save lesson details in the database
+      parameters:
+      - description: Course ID
+        in: formData
+        name: courseId
+        required: true
+        type: integer
+      - description: Lesson title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Video file to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Failed to create lesson
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Upload a lesson video
+      tags:
+      - Lesson
+  /lessons/{lessonId}:
+    delete:
+      description: Delete a lesson by its ID
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Failed to delete lesson
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete a lesson
+      tags:
+      - Lesson
+    get:
+      description: Retrieve details of a specific lesson by its ID
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Lesson'
+        "404":
+          description: Lesson not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Failed to retrieve lesson
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Get a lesson by ID
+      tags:
+      - Lesson
+    put:
+      description: Update a lesson's details and optionally upload a new video
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Course ID
+        in: formData
+        name: courseId
+        type: integer
+      - description: Lesson title
+        in: formData
+        name: title
+        type: string
+      - description: New video file to upload
+        in: formData
+        name: file
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Failed to update lesson
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Update a lesson's details
+      tags:
+      - Lesson
   /users/:
     get:
       description: Retrieve a list of all users, with optional filters for email,
