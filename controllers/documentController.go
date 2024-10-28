@@ -161,11 +161,12 @@ func DeleteDocument(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		err = awsSetup.DeletePDF(fileUrl)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete document"})
-			return
-		}
+		// Prevent delete test data
+		// err = awsSetup.DeletePDF(fileUrl)
+		// if err != nil {
+		// 	c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete document"})
+		// 	return
+		// }
 
 		c.JSON(http.StatusOK, models.Message{Message: "Document deleted successfully"})
 	}
