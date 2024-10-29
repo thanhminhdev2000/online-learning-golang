@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	cloudinaryUtils "online-learning-golang/cloudinary"
 	"online-learning-golang/models"
+	"online-learning-golang/utils"
 	"strconv"
 	"strings"
 
@@ -97,7 +97,7 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 		defer fileContent.Close()
 
 		// Setup Cloudinary
-		cld, err := cloudinaryUtils.SetupCloudinary()
+		cld, err := utils.SetupCloudinary()
 		if err != nil {
 			log.Printf("Error setting up Cloudinary: %v", err)
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to setup Cloudinary"})
@@ -105,7 +105,7 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Upload the file to Cloudinary
-		thumbnailUrl, err := cloudinaryUtils.UploadImage(cld, fileContent)
+		thumbnailUrl, err := utils.UploadImage(cld, fileContent)
 		if err != nil {
 			log.Printf("Error uploading thumbnail: %v", err)
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to upload thumbnail"})
@@ -136,7 +136,7 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 			course.Description, course.Price, course.Instructor)
 		if err != nil {
 			tx.Rollback()
-			if deleteErr := cloudinaryUtils.DeleteImage(cld, course.ThumbnailURL); deleteErr != nil {
+			if deleteErr := utils.DeleteImage(cld, course.ThumbnailURL); deleteErr != nil {
 				log.Printf("Failed to delete image from Cloudinary: %v", deleteErr)
 			}
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to create course"})
@@ -145,7 +145,7 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 
 		if err = tx.Commit(); err != nil {
 			tx.Rollback()
-			if deleteErr := cloudinaryUtils.DeleteImage(cld, course.ThumbnailURL); deleteErr != nil {
+			if deleteErr := utils.DeleteImage(cld, course.ThumbnailURL); deleteErr != nil {
 				log.Printf("Failed to delete image from Cloudinary: %v", deleteErr)
 			}
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to commit transaction"})
@@ -274,7 +274,7 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 			defer fileContent.Close()
 
 			// Setup Cloudinary
-			cld, err := cloudinaryUtils.SetupCloudinary()
+			cld, err := utils.SetupCloudinary()
 			if err != nil {
 				log.Printf("Error setting up Cloudinary: %v", err)
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to setup Cloudinary"})
@@ -282,7 +282,7 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 			}
 
 			// Upload new thumbnail
-			thumbnailURL, err := cloudinaryUtils.UploadImage(cld, fileContent)
+			thumbnailURL, err := utils.UploadImage(cld, fileContent)
 			if err != nil {
 				log.Printf("Error uploading thumbnail: %v", err)
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to upload thumbnail"})
@@ -290,7 +290,7 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 			}
 
 			// Delete old thumbnail
-			if err := cloudinaryUtils.DeleteImage(cld, existingCourse.ThumbnailURL); err != nil {
+			if err := utils.DeleteImage(cld, existingCourse.ThumbnailURL); err != nil {
 				log.Printf("Failed to delete old thumbnail: %v", err)
 				// Continue with update even if deletion fails
 			}
@@ -380,12 +380,12 @@ func DeleteCourse(db *sql.DB) gin.HandlerFunc {
 
 		// Delete thumbnail from Cloudinary after successful database deletion
 		if thumbnailURL != "" {
-			cld, err := cloudinaryUtils.SetupCloudinary()
+			cld, err := utils.SetupCloudinary()
 			if err != nil {
 				log.Printf("Error setting up Cloudinary while deleting thumbnail: %v", err)
 				// Continue even if Cloudinary setup fails
 			} else {
-				if err := cloudinaryUtils.DeleteImage(cld, thumbnailURL); err != nil {
+				if err := utils.DeleteImage(cld, thumbnailURL); err != nil {
 					log.Printf("Failed to delete thumbnail from Cloudinary: %v", err)
 				}
 			}
@@ -530,7 +530,7 @@ func GetCourses(db *sql.DB) gin.HandlerFunc {
 			FROM courses c
 			LEFT JOIN subjects s ON c.subjectId = s.id
 			WHERE 1=1`
-		
+
 		countQuery := "SELECT COUNT(*) FROM courses c WHERE 1=1"
 		params := []interface{}{}
 

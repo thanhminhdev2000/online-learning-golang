@@ -62,6 +62,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
                     }
                 }
             }
@@ -98,13 +104,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Authentication failed",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
@@ -114,7 +126,7 @@ const docTemplate = `{
         },
         "/auth/logout": {
             "post": {
-                "description": "Log out by clearing the refresh token",
+                "description": "Log out by clearing the refresh token and invalidating the session",
                 "produces": [
                     "application/json"
                 ],
@@ -124,9 +136,15 @@ const docTemplate = `{
                 "summary": "Log out",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Logout successful",
                         "schema": {
                             "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "401": {
+                        "description": "No refresh token found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
                         }
                     }
                 }
@@ -134,7 +152,7 @@ const docTemplate = `{
         },
         "/auth/refresh-token": {
             "post": {
-                "description": "Refresh the access token using the refresh token",
+                "description": "Refresh both access token and refresh token",
                 "produces": [
                     "application/json"
                 ],
@@ -144,13 +162,25 @@ const docTemplate = `{
                 "summary": "Refresh access token",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Returns new access token and sets new refresh token cookie",
                         "schema": {
                             "$ref": "#/definitions/models.AccessTokenResponse"
                         }
                     },
+                    "400": {
+                        "description": "Invalid user ID",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Invalid or missing refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
@@ -197,13 +227,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request or password",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Invalid or expired token",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
@@ -250,7 +286,7 @@ const docTemplate = `{
         },
         "/courses": {
             "get": {
-                "description": "Retrieve a list of all courses",
+                "description": "Retrieve a list of all courses with optional filtering and pagination",
                 "produces": [
                     "application/json"
                 ],
@@ -258,14 +294,55 @@ const docTemplate = `{
                     "courses"
                 ],
                 "summary": "Get all courses",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by subject ID",
+                        "name": "subject",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search in title and description",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort field (title, price) (default: id)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc, desc) (default: asc)",
+                        "name": "order",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Course"
-                            }
+                            "$ref": "#/definitions/models.PaginatedResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
                         }
                     },
                     "500": {
@@ -859,7 +936,7 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "Register a new user",
+                "summary": "Register a new regular user",
                 "parameters": [
                     {
                         "description": "User data",
@@ -875,7 +952,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/models.CreateUserResponse"
                         }
                     },
                     "400": {
@@ -921,7 +998,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Message"
+                            "$ref": "#/definitions/models.CreateUserResponse"
                         }
                     },
                     "400": {
@@ -1052,7 +1129,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Delete a user by user ID",
+                "description": "Soft delete a user by user ID. Only admins can delete users, and admins cannot delete their own account.",
                 "tags": [
                     "User"
                 ],
@@ -1073,14 +1150,20 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.Message"
                         }
                     },
+                    "403": {
+                        "description": "Permission denied or trying to delete own account",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
@@ -1095,7 +1178,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update the avatar for a specific user",
+                "description": "Update the avatar for a specific user. Users can update their own avatar, admins can update any user's avatar",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -1135,6 +1218,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.Error"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -1157,7 +1246,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Change the user's password",
+                "description": "Change the user's password. Users can change their own password, admins can change any user's password",
                 "consumes": [
                     "application/json"
                 ],
@@ -1218,10 +1307,6 @@ const docTemplate = `{
     "definitions": {
         "models.AccessTokenResponse": {
             "type": "object",
-            "required": [
-                "accessToken",
-                "expiresIn"
-            ],
             "properties": {
                 "accessToken": {
                     "type": "string"
@@ -1282,14 +1367,6 @@ const docTemplate = `{
         },
         "models.Course": {
             "type": "object",
-            "required": [
-                "description",
-                "instructor",
-                "price",
-                "subjectId",
-                "thumbnailUrl",
-                "title"
-            ],
             "properties": {
                 "description": {
                     "type": "string"
@@ -1317,7 +1394,6 @@ const docTemplate = `{
         "models.CreateUserRequest": {
             "type": "object",
             "required": [
-                "avatar",
                 "dateOfBirth",
                 "email",
                 "fullName",
@@ -1339,17 +1415,43 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gender": {
-                    "$ref": "#/definitions/models.UserGender"
+                    "enum": [
+                        "female",
+                        "male",
+                        "other",
+                        "prefer_not_to_say"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.UserGender"
+                        }
+                    ]
                 },
                 "password": {
                     "type": "string",
                     "minLength": 6
                 },
+                "phoneNumber": {
+                    "type": "string"
+                },
                 "role": {
                     "$ref": "#/definitions/models.UserRole"
                 },
                 "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
+                }
+            }
+        },
+        "models.CreateUserResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
                     "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.UserDetail"
                 }
             }
         },
@@ -1398,9 +1500,6 @@ const docTemplate = `{
         },
         "models.Error": {
             "type": "object",
-            "required": [
-                "error"
-            ],
             "properties": {
                 "error": {
                     "type": "string"
@@ -1458,12 +1557,41 @@ const docTemplate = `{
         },
         "models.Message": {
             "type": "object",
-            "required": [
-                "message"
-            ],
             "properties": {
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "models.PaginatedResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "meta": {
+                    "$ref": "#/definitions/models.Pagination"
+                }
+            }
+        },
+        "models.Pagination": {
+            "type": "object",
+            "properties": {
+                "hasNext": {
+                    "type": "boolean"
+                },
+                "hasPrevious": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
                 }
             }
         },
@@ -1552,7 +1680,6 @@ const docTemplate = `{
         "models.UserDetail": {
             "type": "object",
             "required": [
-                "avatar",
                 "dateOfBirth",
                 "email",
                 "fullName",
@@ -1580,6 +1707,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "phoneNumber": {
+                    "type": "string"
+                },
                 "role": {
                     "$ref": "#/definitions/models.UserRole"
                 },
@@ -1592,11 +1722,13 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "female",
-                "male"
+                "male",
+                "other"
             ],
             "x-enum-varnames": [
                 "GenderFemale",
-                "GenderMale"
+                "GenderMale",
+                "GenderOther"
             ]
         },
         "models.UserResponse": {

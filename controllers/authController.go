@@ -2,10 +2,11 @@ package controllers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"online-learning-golang/models"
 	"online-learning-golang/utils"
-	"regexp"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,106 +21,190 @@ import (
 // @Produce json
 // @Param user body models.LoginRequest true "Login credentials"
 // @Success 200 {object} models.LoginResponse
-// @Failure 400 {object} models.Error
-// @Failure 401 {object} models.Error
+// @Failure 400 {object} models.Error "Invalid request"
+// @Failure 401 {object} models.Error "Authentication failed"
+// @Failure 500 {object} models.Error "Server error"
 // @Router /auth/login [post]
 func Login(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginData models.LoginRequest
 		if err := c.ShouldBindJSON(&loginData); err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
+			c.JSON(http.StatusBadRequest, models.Error{
+				Error: "Invalid request: " + err.Error(),
+			})
 			return
 		}
 
-		var storedPassword string
-		var user models.UserDetail
-		isEmail, _ := regexp.MatchString(`^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$`, loginData.Identifier)
-		var query string
-		if isEmail {
-			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth, role FROM users WHERE email = ?"
-		} else {
-			query = "SELECT id, email, username, fullName, password, gender, avatar, dateOfBirth, role FROM users WHERE username = ?"
+		if err := validateLoginInput(loginData); err != nil {
+			c.JSON(http.StatusBadRequest, models.Error{
+				Error: err.Error(),
+			})
+			return
 		}
 
-		err := db.QueryRow(query, loginData.Identifier).
-			Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &storedPassword, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role)
+		tx, err := db.Begin()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to begin transaction",
+			})
+			return
+		}
+		defer tx.Rollback()
+
+		var user models.UserDetail
+		var password string
+		query := `
+			SELECT id, email, username, fullName, password, 
+				   gender, avatar, dateOfBirth, role 
+			FROM users 
+			WHERE (LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)) 
+			AND deletedAt IS NULL`
+
+		err = tx.QueryRow(query, loginData.Identifier, loginData.Identifier).
+			Scan(
+				&user.ID,
+				&user.Email,
+				&user.Username,
+				&user.FullName,
+				&password,
+				&user.Gender,
+				&user.Avatar,
+				&user.DateOfBirth,
+				&user.Role,
+			)
+
 		if err != nil {
 			if err == sql.ErrNoRows {
-				c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid email or password"})
+				c.JSON(http.StatusUnauthorized, models.Error{
+					Error: "Invalid credentials",
+				})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Database query error"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to fetch user details",
+			})
 			return
 		}
 
-		err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(loginData.Password))
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid email or password"})
+		// Verify password
+		if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(loginData.Password)); err != nil {
+
+			c.JSON(http.StatusUnauthorized, models.Error{
+				Error: "Invalid credentials",
+			})
 			return
 		}
 
 		accessToken, expiresIn, err := utils.CreateAccessToken(user.ID, string(user.Role))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate access token"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to generate access token",
+			})
 			return
 		}
 
-		refreshToken, _, err := utils.CreateRefreshToken(user.ID, string(user.Role))
+		refreshToken, refreshExpiresIn, err := utils.CreateRefreshToken(user.ID, string(user.Role))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate refresh token"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to generate refresh token",
+			})
 			return
 		}
 
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name:     "refreshToken",
-			Value:    refreshToken,
-			Path:     "/",
-			Domain:   "localhost",
-			MaxAge:   7 * 24 * 60 * 60,
-			HttpOnly: true,
-			Secure:   false,
-			SameSite: http.SameSiteLaxMode,
-		})
+		if err = tx.Commit(); err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to complete login process",
+			})
+			return
+		}
 
-		response := models.LoginResponse{
+		setRefreshTokenCookie(c, refreshToken, int(refreshExpiresIn))
+
+		c.JSON(http.StatusOK, models.LoginResponse{
 			Message:     "Login successful",
 			User:        user,
 			AccessToken: accessToken,
 			ExpiresIn:   expiresIn,
-		}
-
-		c.JSON(http.StatusOK, response)
+		})
 	}
+}
+
+// Helper functions
+
+func validateLoginInput(data models.LoginRequest) error {
+	if data.Identifier == "" {
+		return fmt.Errorf("email or username is required")
+	}
+	if data.Password == "" {
+		return fmt.Errorf("password is required")
+	}
+	return nil
+}
+
+func setRefreshTokenCookie(c *gin.Context, token string, expiresIn int) {
+	c.SetCookie(
+		"refreshToken",
+		token,
+		expiresIn,
+		"/",
+		os.Getenv("COOKIE_DOMAIN"),
+		os.Getenv("ENV") == "production", // Secure
+		true,                             // HttpOnly
+	)
 }
 
 // RefreshToken godoc
 // @Summary Refresh access token
-// @Description Refresh the access token using the refresh token
+// @Description Refresh both access token and refresh token
 // @Tags Authentication
 // @Produce json
-// @Success 200 {object} models.AccessTokenResponse
-// @Failure 401 {object} models.Error
+// @Success 200 {object} models.AccessTokenResponse "Returns new access token and sets new refresh token cookie"
+// @Failure 400 {object} models.Error "Invalid user ID"
+// @Failure 401 {object} models.Error "Invalid or missing refresh token"
+// @Failure 500 {object} models.Error "Server error"
 // @Router /auth/refresh-token [post]
 func RefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		refreshToken, err := c.Cookie("refreshToken")
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "No refresh token found"})
+			c.JSON(http.StatusUnauthorized, models.Error{
+				Error: "No refresh token found",
+			})
 			return
 		}
 
 		userId, role, err := utils.ValidToken(refreshToken)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
+			c.JSON(http.StatusUnauthorized, models.Error{
+				Error: "Invalid refresh token",
+			})
+			return
+		}
+
+		if userId <= 0 {
+			c.JSON(http.StatusBadRequest, models.Error{
+				Error: "Invalid user ID",
+			})
 			return
 		}
 
 		accessToken, expiresIn, err := utils.CreateAccessToken(userId, role)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate access token"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to generate access token",
+			})
 			return
 		}
+
+		newRefreshToken, refreshExpiresIn, err := utils.CreateRefreshToken(userId, role)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to generate refresh token",
+			})
+			return
+		}
+
+		setRefreshTokenCookie(c, newRefreshToken, int(refreshExpiresIn))
 
 		c.JSON(http.StatusOK, models.AccessTokenResponse{
 			AccessToken: accessToken,
@@ -130,15 +215,27 @@ func RefreshToken() gin.HandlerFunc {
 
 // Logout godoc
 // @Summary Log out
-// @Description Log out by clearing the refresh token
+// @Description Log out by clearing the refresh token and invalidating the session
 // @Tags Authentication
 // @Produce json
-// @Success 200 {object} models.Message
+// @Success 200 {object} models.Message "Logout successful"
+// @Failure 401 {object} models.Error "No refresh token found"
 // @Router /auth/logout [post]
 func Logout() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.SetCookie("refreshToken", "", -1, "/", "localhost", false, true)
-		c.JSON(http.StatusOK, models.Message{Message: "Logout successful"})
+		c.SetCookie(
+			"refreshToken",
+			"",
+			-1,
+			"/",
+			os.Getenv("COOKIE_DOMAIN"),
+			os.Getenv("ENV") == "production",
+			true,
+		)
+
+		c.JSON(http.StatusOK, models.Message{
+			Message: "Logout successful",
+		})
 	}
 }
 
@@ -152,46 +249,100 @@ func Logout() gin.HandlerFunc {
 // @Success 200 {object} models.Message
 // @Failure 400 {object} models.Error
 // @Failure 404 {object} models.Error
+// @Failure 500 {object} models.Error "Server error"
 // @Router /auth/forgot-password [post]
 func ForgotPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req models.ForgotPasswordRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Email is required"})
+			c.JSON(http.StatusBadRequest, models.Error{
+				Error: "Invalid request format",
+			})
 			return
 		}
 
+		if req.Email == "" || !utils.IsValidEmail(req.Email) {
+			c.JSON(http.StatusBadRequest, models.Error{
+				Error: "Valid email is required",
+			})
+			return
+		}
+
+		tx, err := db.Begin()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to begin transaction",
+			})
+			return
+		}
+		defer tx.Rollback()
+
 		var user models.UserDetail
-		err := db.QueryRow("SELECT id, email FROM users WHERE email = ?", req.Email).Scan(&user.ID, &user.Email)
+		err = tx.QueryRow(`
+			SELECT id, email 
+			FROM users 
+			WHERE email = ? AND deletedAt IS NULL
+		`, req.Email).Scan(&user.ID, &user.Email)
+
 		if err != nil {
 			if err == sql.ErrNoRows {
-				c.JSON(http.StatusNotFound, models.Error{Error: "Email not found"})
+				c.JSON(http.StatusNotFound, models.Error{
+					Error: "Email not found",
+				})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to query user"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to query user",
+			})
+			return
+		}
+
+		_, err = tx.Exec("DELETE FROM reset_pw_tokens WHERE userId = ?", user.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to clear existing tokens",
+			})
 			return
 		}
 
 		token, err := utils.GenerateResetToken()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to generate reset token"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to generate reset token",
+			})
 			return
 		}
 
 		expiry := time.Now().Add(1 * time.Hour)
-		_, err = db.Exec("INSERT INTO reset_pw_tokens (userId, token, expiry) VALUES (?, ?, ?)", user.ID, token, expiry)
+		_, err = tx.Exec(`
+			INSERT INTO reset_pw_tokens (userId, token, expiry) 
+			VALUES (?, ?, ?)
+		`, user.ID, token, expiry)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to store reset token"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to store reset token",
+			})
 			return
 		}
 
 		err = utils.SendResetEmail(req.Email, token)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to send reset email"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to send reset email",
+			})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "Password reset link sent to your email"})
+		if err = tx.Commit(); err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to complete password reset request",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.Message{
+			Message: "Password reset instructions sent to your email",
+		})
 	}
 }
 
@@ -204,69 +355,111 @@ func ForgotPassword(db *sql.DB) gin.HandlerFunc {
 // @Param token query string true "Reset token"
 // @Param password body models.ResetPasswordRequest true "New password"
 // @Success 200 {object} models.Message
-// @Failure 400 {object} models.Error
-// @Failure 401 {object} models.Error
+// @Failure 400 {object} models.Error "Invalid request or password"
+// @Failure 401 {object} models.Error "Invalid or expired token"
+// @Failure 500 {object} models.Error "Server error"
 // @Router /auth/reset-password [post]
 func ResetPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Query("token")
 		if token == "" {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Token is required"})
+			c.JSON(http.StatusBadRequest, models.Error{
+				Error: "Token is required",
+			})
 			return
 		}
 
 		var req models.ResetPasswordRequest
-		if err := c.ShouldBindJSON(&req); err != nil || req.Password == "" {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Password is required"})
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, models.Error{
+				Error: "Invalid request format",
+			})
 			return
 		}
+
+		if err := utils.ValidatePassword(req.Password); err != nil {
+			c.JSON(http.StatusBadRequest, models.Error{
+				Error: err.Error(),
+			})
+			return
+		}
+
+		tx, err := db.Begin()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to begin transaction",
+			})
+			return
+		}
+		defer tx.Rollback()
 
 		var userId int
-		var tokenExpiryRaw []uint8
-		query := "SELECT userId, expiry FROM reset_pw_tokens WHERE token = ?"
+		var tokenExpiry time.Time
+		err = tx.QueryRow(`
+			SELECT userId, expiry 
+			FROM reset_pw_tokens 
+			WHERE token = ?
+		`, token).Scan(&userId, &tokenExpiry)
 
-		err := db.QueryRow(query, token).Scan(&userId, &tokenExpiryRaw)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				c.JSON(http.StatusUnauthorized, models.Error{Error: "Invalid or expired token"})
+				c.JSON(http.StatusUnauthorized, models.Error{
+					Error: "Invalid or expired token",
+				})
 				return
 			}
-
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to verify token"})
-			return
-		}
-
-		tokenExpiryString := string(tokenExpiryRaw)
-		tokenExpiry, err := time.Parse("2006-01-02 15:04:05", tokenExpiryString)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to parse token expiry time"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to verify token",
+			})
 			return
 		}
 
 		if time.Now().After(tokenExpiry) {
-			c.JSON(http.StatusUnauthorized, models.Error{Error: "Token has expired"})
+			_, _ = tx.Exec("DELETE FROM reset_pw_tokens WHERE token = ?", token)
+			c.JSON(http.StatusUnauthorized, models.Error{
+				Error: "Token has expired",
+			})
 			return
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to hash password"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to hash password",
+			})
 			return
 		}
 
-		updateQuery := "UPDATE users SET password = ? WHERE id = ?"
-		_, err = db.Exec(updateQuery, hashedPassword, userId)
+		_, err = tx.Exec(`
+			UPDATE users 
+			SET password = ?,
+				updatedAt = NOW()
+			WHERE id = ?
+		`, hashedPassword, userId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to reset password"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to reset password",
+			})
 			return
 		}
 
-		_, err = db.Exec("DELETE FROM reset_pw_tokens WHERE token = ?", token)
+		_, err = tx.Exec("DELETE FROM reset_pw_tokens WHERE token = ?", token)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to invalidate token"})
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to invalidate token",
+			})
 			return
 		}
 
-		c.JSON(http.StatusOK, models.Message{Message: "Password reset successful"})
+		if err = tx.Commit(); err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to complete password reset",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.Message{
+			Message: "Password reset successful",
+		})
 	}
 }

@@ -10,9 +10,9 @@ import (
 )
 
 func ConnectMySQL() (*sql.DB, error) {
-	dsn := os.Getenv("MYSQL_DSN")
+	dsn := os.Getenv("DB_CONNECTION")
 	if dsn == "" {
-		log.Fatalf("MYSQL_DSN not set in environment")
+		log.Fatalf("DB_CONNECTION not set in environment")
 	}
 
 	db, err := sql.Open("mysql", dsn)
