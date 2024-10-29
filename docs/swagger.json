@@ -242,6 +242,83 @@
                 }
             }
         },
+        "/courses": {
+            "post": {
+                "description": "Create a new course with the provided details",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Create a new course",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subject ID",
+                        "name": "subjectId",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Course Title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Course Description",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Course Price",
+                        "name": "price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Instructor Name",
+                        "name": "instructor",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Thumbnail Image",
+                        "name": "thumbnail",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Course"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/documents/": {
             "get": {
                 "description": "Returns a list of documents, which can be filtered by `subjectId` and `title`. Limits the number of returned documents using the `limit` parameter.",
@@ -985,6 +1062,37 @@
                     "type": "string"
                 },
                 "fullName": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Course": {
+            "type": "object",
+            "required": [
+                "price",
+                "subjectId",
+                "title"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "instructor": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "subjectId": {
+                    "type": "integer"
+                },
+                "thumbnailUrl": {
                     "type": "string"
                 },
                 "title": {

@@ -44,6 +44,27 @@ definitions:
     - fullName
     - title
     type: object
+  models.Course:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      instructor:
+        type: string
+      price:
+        type: number
+      subjectId:
+        type: integer
+      thumbnailUrl:
+        type: string
+      title:
+        type: string
+    required:
+    - price
+    - subjectId
+    - title
+    type: object
   models.CreateUserRequest:
     properties:
       avatar:
@@ -422,6 +443,58 @@ paths:
       summary: Send email contact
       tags:
       - Contact
+  /courses:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new course with the provided details
+      parameters:
+      - description: Subject ID
+        in: formData
+        name: subjectId
+        required: true
+        type: integer
+      - description: Course Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Course Description
+        in: formData
+        name: description
+        type: string
+      - description: Course Price
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: Instructor Name
+        in: formData
+        name: instructor
+        type: string
+      - description: Thumbnail Image
+        in: formData
+        name: thumbnail
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Course'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Create a new course
+      tags:
+      - courses
   /documents/:
     get:
       description: Returns a list of documents, which can be filtered by `subjectId`

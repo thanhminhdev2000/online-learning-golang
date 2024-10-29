@@ -439,7 +439,7 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 			log.Fatalf("Error setting up Cloudinary: %v", err)
 		}
 
-		avatarURL, err := cloudinarySetup.UploadAvatar(cld, fileContent)
+		avatarURL, err := cloudinarySetup.UploadImage(cld, fileContent)
 		if err != nil {
 			log.Fatalf("Error uploading avatar: %v", err)
 		}

@@ -25,9 +25,9 @@ func SetupCloudinary() (*cloudinary.Cloudinary, error) {
 	return cld, nil
 }
 
-func UploadAvatar(cld *cloudinary.Cloudinary, fileContent io.Reader) (string, error) {
+func UploadImage(cld *cloudinary.Cloudinary, fileContent io.Reader) (string, error) {
 	uploadParams := uploader.UploadParams{
-		Folder:   "avatars",
+		Folder:   "images",
 		PublicID: "",
 	}
 

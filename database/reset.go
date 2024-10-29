@@ -187,6 +187,7 @@ func CreateCoursesTable(db *sql.DB) error {
         id INT AUTO_INCREMENT PRIMARY KEY,
         subjectId INT NOT NULL,
         title VARCHAR(255) NOT NULL,
+		thumbnailUrl VARCHAR(255) NOT NULL,
         description TEXT,
         price DECIMAL(10, 2) NOT NULL,
         instructor VARCHAR(255),
