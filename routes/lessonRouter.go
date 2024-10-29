@@ -10,8 +10,8 @@ import (
 
 func LessonRoutes(router *gin.RouterGroup, db *sql.DB) {
 	router.GET("/", controllers.GetLessons(db))
-	router.GET("/:lessonId", controllers.GetLesson(db))
+	router.GET("/:id", controllers.GetLesson(db))
 	router.POST("/", middleware.AuthMiddleware(), controllers.CreateLesson(db))
-	router.PUT("/:lessonId", middleware.AuthMiddleware(), controllers.UpdateLesson(db))
-	router.DELETE("/:lessonId", middleware.AuthMiddleware(), controllers.DeleteLesson(db))
+	router.PUT("/:id", middleware.AuthMiddleware(), controllers.UpdateLesson(db))
+	router.DELETE("/:id", middleware.AuthMiddleware(), controllers.DeleteLesson(db))
 }

@@ -259,20 +259,20 @@ func GetUserDetail(db *sql.DB, userId string) (models.UserDetail, error) {
 // @Success 200 {object} models.UserDetail
 // @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
-// @Router /users/{userId} [get]
+// @Router /users/{id} [get]
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		userId := c.Param("userId")
-		currentUserId, _ := c.Get("userId")
+		userID := c.Param("id")
+		currentUserID, _ := c.Get("userId")
 
 		currentUserRole, _ := c.Get("role")
-		if currentUserRole == "user" && currentUserId != userId {
+		if currentUserRole == "user" && currentUserID != userID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to get this user"})
 			return
 		}
 
-		user, err := GetUserDetail(db, userId)
+		user, err := GetUserDetail(db, userID)
 		if err != nil {
 			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
 			return
@@ -295,7 +295,7 @@ func GetUserByID(db *sql.DB) gin.HandlerFunc {
 // @Failure 400 {object} models.Error
 // @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
-// @Router /users/{userId} [put]
+// @Router /users/{id} [put]
 func UpdateUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentUserRole, _ := c.Get("role")
@@ -304,7 +304,7 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		userId := c.Param("userId")
+		userID := c.Param("id")
 		var updateUser models.UserDetail
 
 		if err := c.ShouldBindJSON(&updateUser); err != nil {
@@ -314,13 +314,13 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 		}
 
 		query := "UPDATE users SET email = ?, username = ?, fullName = ?, gender = ?, dateOfBirth = ? WHERE id = ? AND deletedAt IS NULL"
-		_, err := db.Exec(query, updateUser.Email, updateUser.Username, updateUser.FullName, updateUser.Gender, updateUser.DateOfBirth, userId)
+		_, err := db.Exec(query, updateUser.Email, updateUser.Username, updateUser.FullName, updateUser.Gender, updateUser.DateOfBirth, userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update user"})
 			return
 		}
 
-		user, err := GetUserDetail(db, userId)
+		user, err := GetUserDetail(db, userID)
 		if err != nil {
 			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
 			return
@@ -343,7 +343,7 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 // @Failure 400 {object} models.Error
 // @Failure 404 {object} models.Error
 // @Failure 401 {object} models.Error
-// @Router /users/{userId}/password [put]
+// @Router /users/{id}/password [put]
 func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentUserRole, _ := c.Get("role")
@@ -352,7 +352,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		userId := c.Param("userId")
+		userID := c.Param("id")
 
 		var req struct {
 			CurrentPassword string `json:"currentPassword"`
@@ -365,7 +365,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 		}
 
 		var storedPassword string
-		err := db.QueryRow("SELECT password FROM users WHERE id = ? AND deletedAt IS NULL", userId).Scan(&storedPassword)
+		err := db.QueryRow("SELECT password FROM users WHERE id = ? AND deletedAt IS NULL", userID).Scan(&storedPassword)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
@@ -387,7 +387,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		_, err = db.Exec("UPDATE users SET password = ? WHERE id = ? AND deletedAt IS NULL", hashedNewPassword, userId)
+		_, err = db.Exec("UPDATE users SET password = ? WHERE id = ? AND deletedAt IS NULL", hashedNewPassword, userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update password"})
 			return
@@ -410,7 +410,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 // @Failure 400 {object} models.Error
 // @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
-// @Router /users/{userId}/avatar [put]
+// @Router /users/{id}/avatar [put]
 func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentUserRole, _ := c.Get("role")
@@ -419,7 +419,7 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		userId := c.Param("userId")
+		userID := c.Param("id")
 
 		file, err := c.FormFile("avatar")
 		if err != nil {
@@ -445,13 +445,13 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 		}
 
 		query := "UPDATE users SET avatar = ? WHERE id = ? AND deletedAt IS NULL"
-		_, err = db.Exec(query, avatarURL, userId)
+		_, err = db.Exec(query, avatarURL, userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update avatar in database"})
 			return
 		}
 
-		user, err := GetUserDetail(db, userId)
+		user, err := GetUserDetail(db, userID)
 		if err != nil {
 			c.JSON(http.StatusNotFound, models.Error{Error: "User not found"})
 			return
@@ -469,7 +469,7 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} models.Message
 // @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
-// @Router /users/{userId} [delete]
+// @Router /users/{id} [delete]
 func DeleteUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentUserId, _ := c.Get("userId")
@@ -480,7 +480,7 @@ func DeleteUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		userIdToDelete := c.Param("userId")
+		userIdToDelete := c.Param("id")
 		if userIdToDelete == currentUserId {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot delete your own account"})
 			return

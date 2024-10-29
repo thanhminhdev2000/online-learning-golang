@@ -538,7 +538,7 @@ paths:
       summary: Create a new course
       tags:
       - Course
-  /courses/{courseId}:
+  /courses/{id}:
     delete:
       description: Delete a course by its ID
       parameters:
@@ -689,7 +689,7 @@ paths:
       summary: Upload document file
       tags:
       - Document
-  /documents/{documentId}:
+  /documents/{id}:
     delete:
       description: Delete a document by document ID
       parameters:
@@ -851,7 +851,7 @@ paths:
       summary: Upload a lesson video
       tags:
       - Lesson
-  /lessons/{lessonId}:
+  /lessons/{id}:
     delete:
       description: Delete a lesson by its ID
       parameters:
@@ -1016,7 +1016,7 @@ paths:
       summary: Register a new user
       tags:
       - User
-  /users/{userId}:
+  /users/{id}:
     delete:
       description: Delete a user by user ID
       parameters:
@@ -1111,7 +1111,7 @@ paths:
       summary: Update user information
       tags:
       - User
-  /users/{userId}/avatar:
+  /users/{id}/avatar:
     put:
       consumes:
       - multipart/form-data
@@ -1151,7 +1151,7 @@ paths:
       summary: Update user avatar
       tags:
       - User
-  /users/{userId}/password:
+  /users/{id}/password:
     put:
       consumes:
       - application/json

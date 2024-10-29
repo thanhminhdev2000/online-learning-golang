@@ -135,7 +135,7 @@ func CreateDocument(db *sql.DB) gin.HandlerFunc {
 // @Param documentId path int true "Document ID"
 // @Success 200 {object} models.Message
 // @Failure 500 {object} models.Error
-// @Router /documents/{documentId} [delete]
+// @Router /documents/{id} [delete]
 func DeleteDocument(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, _ := c.Get("role")
@@ -144,18 +144,18 @@ func DeleteDocument(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		documentId := c.Param("documentId")
+		documentID := c.Param("id")
 		var fileUrl string
 		query := "SELECT fileUrl FROM documents WHERE id = ?"
 
-		row := db.QueryRow(query, documentId)
+		row := db.QueryRow(query, documentID)
 		if err := row.Scan(&fileUrl); err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete document"})
 			return
 		}
 
 		query = "DELETE FROM documents WHERE id = ?"
-		_, err := db.Exec(query, documentId)
+		_, err := db.Exec(query, documentID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete document"})
 			return
@@ -279,7 +279,7 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 // @Failure 400 {object} models.Error
 // @Failure 403 {object} models.Error
 // @Failure 500 {object} models.Error
-// @Router /documents/{documentId} [put]
+// @Router /documents/{id} [put]
 func UpdateDocument(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, _ := c.Get("role")
@@ -288,7 +288,7 @@ func UpdateDocument(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		documentId := c.Param("documentId")
+		documentID := c.Param("id")
 		var updateFields []string
 		var args []interface{}
 
@@ -327,7 +327,7 @@ func UpdateDocument(db *sql.DB) gin.HandlerFunc {
 			var oldFileUrl string
 
 			query := "SELECT fileUrl FROM documents WHERE id = ?"
-			err = db.QueryRow(query, documentId).Scan(&oldFileUrl)
+			err = db.QueryRow(query, documentID).Scan(&oldFileUrl)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to retrieve existing document file"})
 				return
@@ -355,7 +355,7 @@ func UpdateDocument(db *sql.DB) gin.HandlerFunc {
 		}
 
 		query := fmt.Sprintf("UPDATE documents SET %s WHERE id = ?", strings.Join(updateFields, ", "))
-		args = append(args, documentId)
+		args = append(args, documentID)
 		_, err = db.Exec(query, args...)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update document"})

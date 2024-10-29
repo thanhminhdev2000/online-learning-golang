@@ -71,14 +71,14 @@ func GetCourses(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} models.Course
 // @Failure 404 {object} models.Error "Course not found"
 // @Failure 500 {object} models.Error "Failed to retrieve course"
-// @Router /courses/{courseId} [get]
+// @Router /courses/{id} [get]
 func GetCourse(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		courseId := c.Param("courseId")
+		courseID := c.Param("id")
 		var course models.Course
 
 		query := "SELECT id, subjectId, title, description, price, instructor FROM courses WHERE id = ?"
-		err := db.QueryRow(query, courseId).Scan(
+		err := db.QueryRow(query, courseID).Scan(
 			&course.ID, &course.SubjectID, &course.Title, &course.Description,
 			&course.Price, &course.Instructor,
 		)
@@ -133,7 +133,7 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} models.Message
 // @Failure 400 {object} models.Error "Invalid request data"
 // @Failure 500 {object} models.Error "Failed to update course"
-// @Router /courses/{courseId} [put]
+// @Router /courses/{id} [put]
 func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var updateRequest models.UpdateCourseRequest
@@ -142,7 +142,7 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		courseId := c.Param("courseId")
+		courseID := c.Param("id")
 
 		query := "UPDATE courses SET "
 		args := []interface{}{}
@@ -164,7 +164,7 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 		}
 		query = query[:len(query)-2] // Remove the last comma and space
 		query += " WHERE id = ?"
-		args = append(args, courseId)
+		args = append(args, courseID)
 
 		_, err := db.Exec(query, args...)
 		if err != nil {
@@ -184,13 +184,13 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 // @Param id path int true "Course ID"
 // @Success 200 {object} models.Message
 // @Failure 500 {object} models.Error "Failed to delete course"
-// @Router /courses/{courseId} [delete]
+// @Router /courses/{id} [delete]
 func DeleteCourse(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		courseId := c.Param("courseId")
+		courseID := c.Param("id")
 
 		query := "DELETE FROM courses WHERE id = ?"
-		_, err := db.Exec(query, courseId)
+		_, err := db.Exec(query, courseID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete course"})
 			return

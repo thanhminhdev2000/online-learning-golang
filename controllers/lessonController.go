@@ -77,10 +77,10 @@ func GetLessons(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} models.Lesson
 // @Failure 404 {object} models.Error "Lesson not found"
 // @Failure 500 {object} models.Error "Failed to retrieve lesson"
-// @Router /lessons/{lessonId} [get]
+// @Router /lessons/{id} [get]
 func GetLesson(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		lessonID := c.Param("lessonId")
+		lessonID := c.Param("id")
 		var lesson models.Lesson
 
 		query := "SELECT id, courseId, title, videoUrl FROM lessons WHERE id = ?"
@@ -170,10 +170,10 @@ func CreateLesson(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} models.Message
 // @Failure 400 {object} models.Error "Invalid request data"
 // @Failure 500 {object} models.Error "Failed to update lesson"
-// @Router /lessons/{lessonId} [put]
+// @Router /lessons/{id} [put]
 func UpdateLesson(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		lessonID := c.Param("lessonId")
+		lessonID := c.Param("id")
 		var updateRequest models.UpdateLessonRequest
 		if err := c.ShouldBind(&updateRequest); err != nil {
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request data"})
@@ -241,10 +241,10 @@ func UpdateLesson(db *sql.DB) gin.HandlerFunc {
 // @Success 200 {object} models.Message
 // @Failure 404 {object} models.Error "Lesson not found"
 // @Failure 500 {object} models.Error "Failed to delete lesson"
-// @Router /lessons/{lessonId} [delete]
+// @Router /lessons/{id} [delete]
 func DeleteLesson(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		lessonID := c.Param("lessonId")
+		lessonID := c.Param("id")
 
 		query := "DELETE FROM lessons WHERE id = ?"
 		result, err := db.Exec(query, lessonID)

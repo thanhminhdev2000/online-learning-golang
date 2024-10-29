@@ -333,7 +333,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/courses/{courseId}": {
+        "/courses/{id}": {
             "get": {
                 "description": "Retrieve details of a specific course by its ID",
                 "tags": [
@@ -590,7 +590,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/documents/{documentId}": {
+        "/documents/{id}": {
             "put": {
                 "security": [
                     {
@@ -814,7 +814,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/lessons/{lessonId}": {
+        "/lessons/{id}": {
             "get": {
                 "security": [
                     {
@@ -1118,7 +1118,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{userId}": {
+        "/users/{id}": {
             "get": {
                 "security": [
                     {
@@ -1267,7 +1267,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{userId}/avatar": {
+        "/users/{id}/avatar": {
             "put": {
                 "security": [
                     {
@@ -1329,7 +1329,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{userId}/password": {
+        "/users/{id}/password": {
             "put": {
                 "security": [
                     {

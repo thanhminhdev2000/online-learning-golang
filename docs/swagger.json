@@ -327,7 +327,7 @@
                 }
             }
         },
-        "/courses/{courseId}": {
+        "/courses/{id}": {
             "get": {
                 "description": "Retrieve details of a specific course by its ID",
                 "tags": [
@@ -584,7 +584,7 @@
                 }
             }
         },
-        "/documents/{documentId}": {
+        "/documents/{id}": {
             "put": {
                 "security": [
                     {
@@ -808,7 +808,7 @@
                 }
             }
         },
-        "/lessons/{lessonId}": {
+        "/lessons/{id}": {
             "get": {
                 "security": [
                     {
@@ -1112,7 +1112,7 @@
                 }
             }
         },
-        "/users/{userId}": {
+        "/users/{id}": {
             "get": {
                 "security": [
                     {
@@ -1261,7 +1261,7 @@
                 }
             }
         },
-        "/users/{userId}/avatar": {
+        "/users/{id}/avatar": {
             "put": {
                 "security": [
                     {
@@ -1323,7 +1323,7 @@
                 }
             }
         },
-        "/users/{userId}/password": {
+        "/users/{id}/password": {
             "put": {
                 "security": [
                     {
