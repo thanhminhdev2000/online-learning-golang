@@ -248,214 +248,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/courses/": {
-            "get": {
-                "description": "Retrieve details of all available courses with pagination support",
-                "tags": [
-                    "Course"
-                ],
-                "summary": "Get a list of courses with pagination",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Number of courses per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Course"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid pagination parameters",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to retrieve courses",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new course under a specific subject",
-                "tags": [
-                    "Course"
-                ],
-                "summary": "Create a new course",
-                "parameters": [
-                    {
-                        "description": "Course data",
-                        "name": "course",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.CreateCourseRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/courses/{id}": {
-            "get": {
-                "description": "Retrieve details of a specific course by its ID",
-                "tags": [
-                    "Course"
-                ],
-                "summary": "Get a course by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Course ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Course"
-                        }
-                    },
-                    "404": {
-                        "description": "Course not found",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to retrieve course",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update course details like title, description, price, or instructor",
-                "tags": [
-                    "Course"
-                ],
-                "summary": "Update a course",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Course ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Course data",
-                        "name": "course",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.UpdateCourseRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request data",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to update course",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete a course by its ID",
-                "tags": [
-                    "Course"
-                ],
-                "summary": "Delete a course",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Course ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to delete course",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            }
-        },
         "/documents/": {
             "get": {
                 "description": "Returns a list of documents, which can be filtered by ` + "`" + `subjectId` + "`" + ` and ` + "`" + `title` + "`" + `. Limits the number of returned documents using the ` + "`" + `limit` + "`" + ` parameter.",
@@ -490,7 +282,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.DocumentsResponse"
+                                "$ref": "#/definitions/models.Document"
                             }
                         }
                     },
@@ -521,31 +313,13 @@ const docTemplate = `{
                 "summary": "Upload document file",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Subject ID",
-                        "name": "subjectId",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Document title",
-                        "name": "title",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Document author",
-                        "name": "author",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "File to upload",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
+                        "description": "Document data",
+                        "name": "document",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateDocument"
+                        }
                     }
                 ],
                 "responses": {
@@ -577,7 +351,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.ClassWithSubjects"
+                                "$ref": "#/definitions/models.Class"
                             }
                         }
                     },
@@ -606,7 +380,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "Document ID",
-                        "name": "documentId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -683,7 +457,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "Document ID",
-                        "name": "documentId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -697,259 +471,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/lessons": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieve a paginated list of lessons",
-                "tags": [
-                    "Lesson"
-                ],
-                "summary": "Get a list of lessons with pagination",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Number of lessons per page",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Lesson"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid pagination parameters",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to retrieve lessons",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/lessons/": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Upload a video for a lesson and save lesson details in the database",
-                "tags": [
-                    "Lesson"
-                ],
-                "summary": "Upload a lesson video",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Course ID",
-                        "name": "courseId",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Lesson title",
-                        "name": "title",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Video file to upload",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request data",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to create lesson",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/lessons/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Retrieve details of a specific lesson by its ID",
-                "tags": [
-                    "Lesson"
-                ],
-                "summary": "Get a lesson by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Lesson ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Lesson"
-                        }
-                    },
-                    "404": {
-                        "description": "Lesson not found",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to retrieve lesson",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update a lesson's details and optionally upload a new video",
-                "tags": [
-                    "Lesson"
-                ],
-                "summary": "Update a lesson's details",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Lesson ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Course ID",
-                        "name": "courseId",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Lesson title",
-                        "name": "title",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "New video file to upload",
-                        "name": "file",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request data",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to update lesson",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete a lesson by its ID",
-                "tags": [
-                    "Lesson"
-                ],
-                "summary": "Delete a lesson",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Lesson ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Message"
-                        }
-                    },
-                    "404": {
-                        "description": "Lesson not found",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to delete lesson",
                         "schema": {
                             "$ref": "#/definitions/models.Error"
                         }
@@ -1410,28 +931,28 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ClassWithSubjects": {
+        "models.Class": {
             "type": "object",
             "required": [
-                "classId",
-                "className",
                 "count",
+                "id",
+                "name",
                 "subjects"
             ],
             "properties": {
-                "classId": {
-                    "type": "integer"
-                },
-                "className": {
-                    "type": "string"
-                },
                 "count": {
                     "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 },
                 "subjects": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.SubjectId"
+                        "$ref": "#/definitions/models.Subject"
                     }
                 }
             }
@@ -1459,50 +980,16 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Course": {
+        "models.CreateDocument": {
             "type": "object",
             "required": [
-                "price",
+                "author",
                 "subjectId",
                 "title"
             ],
             "properties": {
-                "description": {
+                "author": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "instructor": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "subjectId": {
-                    "type": "integer"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.CreateCourseRequest": {
-            "type": "object",
-            "required": [
-                "price",
-                "subjectId",
-                "title"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "instructor": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
                 },
                 "subjectId": {
                     "type": "integer"
@@ -1551,13 +1038,12 @@ const docTemplate = `{
                 }
             }
         },
-        "models.DocumentsResponse": {
+        "models.Document": {
             "type": "object",
             "required": [
                 "author",
                 "category",
                 "classId",
-                "documentType",
                 "downloads",
                 "fileUrl",
                 "id",
@@ -1574,9 +1060,6 @@ const docTemplate = `{
                 },
                 "classId": {
                     "type": "integer"
-                },
-                "documentType": {
-                    "type": "string"
                 },
                 "downloads": {
                     "type": "integer"
@@ -1616,23 +1099,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Lesson": {
-            "type": "object",
-            "properties": {
-                "courseId": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "videoUrl": {
                     "type": "string"
                 }
             }
@@ -1734,38 +1200,21 @@ const docTemplate = `{
                 }
             }
         },
-        "models.SubjectId": {
+        "models.Subject": {
             "type": "object",
             "required": [
                 "count",
-                "subjectId",
-                "subjectName"
+                "id",
+                "name"
             ],
             "properties": {
                 "count": {
                     "type": "integer"
                 },
-                "subjectId": {
+                "id": {
                     "type": "integer"
                 },
-                "subjectName": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.UpdateCourseRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "instructor": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "title": {
+                "name": {
                     "type": "string"
                 }
             }

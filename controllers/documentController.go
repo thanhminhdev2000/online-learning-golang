@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetClassesWithSubjects(db *sql.DB) ([]models.ClassWithSubjects, error) {
+func GetClasses(db *sql.DB) ([]models.Class, error) {
 	classQuery := `
         SELECT c.id, c.name, COUNT(d.id) as documentCount
         FROM classes c
@@ -26,11 +26,11 @@ func GetClassesWithSubjects(db *sql.DB) ([]models.ClassWithSubjects, error) {
 	}
 	defer rows.Close()
 
-	var classList []models.ClassWithSubjects
+	var classList []models.Class
 
 	for rows.Next() {
-		var class models.ClassWithSubjects
-		if err := rows.Scan(&class.ClassID, &class.ClassName, &class.Count); err != nil {
+		var class models.Class
+		if err := rows.Scan(&class.ID, &class.Name, &class.Count); err != nil {
 			return nil, err
 		}
 
@@ -41,16 +41,16 @@ func GetClassesWithSubjects(db *sql.DB) ([]models.ClassWithSubjects, error) {
             WHERE s.classId = ?
             GROUP BY s.id;
         `
-		subjectRows, err := db.Query(subjectQuery, class.ClassID)
+		subjectRows, err := db.Query(subjectQuery, class.ID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get subjects for classId %d: %w", class.ClassID, err)
+			return nil, fmt.Errorf("failed to get subjects for classId %d: %w", class.ID, err)
 		}
 		defer subjectRows.Close()
 
-		var subjects []models.SubjectId
+		var subjects []models.Subject
 		for subjectRows.Next() {
-			var subject models.SubjectId
-			if err := subjectRows.Scan(&subject.SubjectID, &subject.SubjectName, &subject.Count); err != nil {
+			var subject models.Subject
+			if err := subjectRows.Scan(&subject.ID, &subject.Name, &subject.Count); err != nil {
 				return nil, err
 			}
 			subjects = append(subjects, subject)
@@ -63,26 +63,26 @@ func GetClassesWithSubjects(db *sql.DB) ([]models.ClassWithSubjects, error) {
 	return classList, nil
 }
 
-// GetListClassesWithSubjects godoc
+// GetListClass godoc
 // @Summary List of classes with their subjects and document counts
 // @Description List of classes with their subjects and document counts
 // @Tags Document
-// @Success 200 {array} models.ClassWithSubjects
+// @Success 200 {array} models.Class
 // @Failure 500 {object} models.Error
 // @Router /documents/subjects [get]
-func GetListClassesWithSubjects(db *sql.DB) gin.HandlerFunc {
+func GetListClass(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		classesWithSubjects, err := GetClassesWithSubjects(db)
+		class, err := GetClasses(db)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, classesWithSubjects)
+		c.JSON(http.StatusOK, class)
 	}
 }
 
-// UploadDocument godoc
+// CreateDocument godoc
 // @Summary Upload document file
 // @Description Upload document file
 // @Tags Document
@@ -96,7 +96,7 @@ func GetListClassesWithSubjects(db *sql.DB) gin.HandlerFunc {
 // @Router /documents/ [post]
 func CreateDocument(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var document models.CreateRequest
+		var document models.CreateDocument
 		if err := c.ShouldBind(&document); err != nil {
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request data"})
 			return
@@ -132,7 +132,7 @@ func CreateDocument(db *sql.DB) gin.HandlerFunc {
 // @Description Delete a document by document ID
 // @Tags Document
 // @Security BearerAuth
-// @Param documentId path int true "Document ID"
+// @Param id path int true "Document ID"
 // @Success 200 {object} models.Message
 // @Failure 500 {object} models.Error
 // @Router /documents/{id} [delete]
@@ -179,7 +179,7 @@ func DeleteDocument(db *sql.DB) gin.HandlerFunc {
 // @Param limit query int false "Limit the number of documents returned" default(40) max(100)
 // @Param subjectId query int false "Subject ID"
 // @Param title query string false "Document title (searched using LIKE)"
-// @Success 200 {array} models.DocumentsResponse
+// @Success 200 {array} models.Document
 // @Failure 400 {object} models.Error
 // @Failure 500 {object} models.Error
 // @Router /documents/ [get]
@@ -210,7 +210,6 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 				CONCAT(s.name, ' - ', c.name) AS category, 
 				d.title, 
 				d.fileUrl, 
-				d.documentType, 
 				d.views, 
 				d.downloads, 
 				d.author 
@@ -246,10 +245,10 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 		}
 		defer rows.Close()
 
-		var documents []models.DocumentsResponse
+		var documents []models.Document
 		for rows.Next() {
-			var doc models.DocumentsResponse
-			if err := rows.Scan(&doc.ID, &doc.ClassID, &doc.SubjectID, &doc.Category, &doc.Title, &doc.FileURL, &doc.DocumentType, &doc.Views, &doc.Downloads, &doc.Author); err != nil {
+			var doc models.Document
+			if err := rows.Scan(&doc.ID, &doc.ClassID, &doc.SubjectID, &doc.Category, &doc.Title, &doc.FileURL, &doc.Views, &doc.Downloads, &doc.Author); err != nil {
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to parse document data"})
 				return
 			}
@@ -257,7 +256,7 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 		}
 
 		if len(documents) == 0 {
-			documents = []models.DocumentsResponse{}
+			documents = []models.Document{}
 		}
 
 		c.JSON(http.StatusOK, documents)
@@ -269,7 +268,7 @@ func GetDocuments(db *sql.DB) gin.HandlerFunc {
 // @Description Update a document's information and optionally replace its file by document ID
 // @Tags Document
 // @Security BearerAuth
-// @Param documentId path int true "Document ID"
+// @Param id path int true "Document ID"
 // @Param title formData string false "Document title"
 // @Param author formData string false "Document author"
 // @Param views formData int false "Number of views"

@@ -167,7 +167,6 @@ func CreateDocumentsTable(db *sql.DB) error {
         subjectId INT NOT NULL,
         title VARCHAR(255) NOT NULL,
         fileUrl VARCHAR(255),
-        documentType ENUM('PDF', 'VIDEO') NOT NULL DEFAULT 'PDF',
 		views INT DEFAULT 0,
         downloads INT DEFAULT 0,
 		author VARCHAR(255) DEFAULT "admin",
