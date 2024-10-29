@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	cloudinarySetup "online-learning-golang/cloudinary"
+	cloudinaryUtils "online-learning-golang/cloudinary"
 	"online-learning-golang/models"
 	"strconv"
 
@@ -434,12 +434,12 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 		}
 		defer fileContent.Close()
 
-		cld, err := cloudinarySetup.SetupCloudinary()
+		cld, err := cloudinaryUtils.SetupCloudinary()
 		if err != nil {
 			log.Fatalf("Error setting up Cloudinary: %v", err)
 		}
 
-		avatarURL, err := cloudinarySetup.UploadImage(cld, fileContent)
+		avatarURL, err := cloudinaryUtils.UploadImage(cld, fileContent)
 		if err != nil {
 			log.Fatalf("Error uploading avatar: %v", err)
 		}

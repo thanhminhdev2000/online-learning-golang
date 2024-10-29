@@ -4,16 +4,16 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"online-learning-golang/database"
-	"online-learning-golang/routes"
 	"os"
 
 	"github.com/gin-contrib/cors"
-
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 
+	"online-learning-golang/database"
 	_ "online-learning-golang/docs"
+	"online-learning-golang/routes"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
