@@ -44,19 +44,6 @@ definitions:
     - fullName
     - title
     type: object
-  models.CreateDocument:
-    properties:
-      author:
-        type: string
-      subjectId:
-        type: integer
-      title:
-        type: string
-    required:
-    - author
-    - subjectId
-    - title
-    type: object
   models.CreateUserRequest:
     properties:
       avatar:
@@ -474,12 +461,25 @@ paths:
     post:
       description: Upload document file
       parameters:
-      - description: Document data
-        in: body
-        name: document
+      - description: Subject ID
+        in: formData
+        name: subjectId
         required: true
-        schema:
-          $ref: '#/definitions/models.CreateDocument'
+        type: integer
+      - description: Document title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Document author
+        in: formData
+        name: author
+        type: string
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
       responses:
         "200":
           description: OK

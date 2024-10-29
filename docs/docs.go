@@ -313,13 +313,31 @@ const docTemplate = `{
                 "summary": "Upload document file",
                 "parameters": [
                     {
-                        "description": "Document data",
-                        "name": "document",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.CreateDocument"
-                        }
+                        "type": "integer",
+                        "description": "Subject ID",
+                        "name": "subjectId",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document author",
+                        "name": "author",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -974,25 +992,6 @@ const docTemplate = `{
                 },
                 "fullName": {
                     "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.CreateDocument": {
-            "type": "object",
-            "required": [
-                "author",
-                "subjectId",
-                "title"
-            ],
-            "properties": {
-                "author": {
-                    "type": "string"
-                },
-                "subjectId": {
-                    "type": "integer"
                 },
                 "title": {
                     "type": "string"
