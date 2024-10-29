@@ -132,7 +132,7 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 // @Param        price       formData  number  true   "Course Price"
 // @Param        instructor  formData  string  true   "Instructor Name"
 // @Param        thumbnail   formData  file    true   "Thumbnail Image"
-// @Success      200         {object}  Course
+// @Success      200         {object}  models.Course
 // @Failure      400         {object}  models.Error
 // @Failure      404         {object}  models.Error
 // @Failure      500         {object}  models.Error
