@@ -162,7 +162,7 @@ func CreateUserAdmin(db *sql.DB) gin.HandlerFunc {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param userId path int true "User ID"
+// @Param id path int true "User ID"
 // @Param user body models.UserDetail true "User data"
 // @Success 200 {object} models.UpdateUserResponse
 // @Failure 400 {object} models.Error
@@ -172,7 +172,7 @@ func CreateUserAdmin(db *sql.DB) gin.HandlerFunc {
 func UpdateUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.Param("id")
-		currentUserID, _ := c.Get("userId")
+		currentUserID, _ := c.Get("id")
 		currentUserRole, _ := c.Get("role")
 
 		// Allow users to update their own info or admin to update any user
@@ -271,7 +271,7 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param userId path int true "User ID"
+// @Param id path int true "User ID"
 // @Param password body models.PasswordUpdateRequest true "Password data"
 // @Success 200 {object} models.Message
 // @Failure 400 {object} models.Error
@@ -281,7 +281,7 @@ func UpdateUser(db *sql.DB) gin.HandlerFunc {
 func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.Param("id")
-		currentUserID, _ := c.Get("userId")
+		currentUserID, _ := c.Get("id")
 		currentUserRole, _ := c.Get("role")
 
 		// Check permissions - allow users to change their own password or admin to change any password
@@ -382,7 +382,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 // @Security BearerAuth
 // @Accept multipart/form-data
 // @Produce json
-// @Param userId path int true "User ID"
+// @Param id path int true "User ID"
 // @Param avatar formData file true "User Avatar"
 // @Success 200 {object} models.UpdateUserResponse
 // @Failure 400 {object} models.Error
@@ -393,7 +393,7 @@ func UpdateUserPassword(db *sql.DB) gin.HandlerFunc {
 func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.Param("id")
-		currentUserID, _ := c.Get("userId")
+		currentUserID, _ := c.Get("id")
 		currentUserRole, _ := c.Get("role")
 
 		if currentUserRole != "admin" && currentUserID != userID {
@@ -526,7 +526,7 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 // @Description Soft delete a user by user ID. Only admins can delete users, and admins cannot delete their own account.
 // @Tags User
 // @Security BearerAuth
-// @Param userId path int true "User ID"
+// @Param id path int true "User ID"
 // @Success 200 {object} models.Message
 // @Failure 403 {object} models.Error "Permission denied or trying to delete own account"
 // @Failure 404 {object} models.Error "User not found"
@@ -534,7 +534,7 @@ func UpdateUserAvatar(db *sql.DB) gin.HandlerFunc {
 // @Router /users/{id} [delete]
 func DeleteUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		currentUserID, _ := c.Get("userId")
+		currentUserID, _ := c.Get("id")
 		currentUserRole, _ := c.Get("role")
 		userIDToDelete := c.Param("id")
 
@@ -717,8 +717,8 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-func GetUserDetail(db *sql.DB, userId string) (models.UserDetail, error) {
-	row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role FROM users WHERE id = ? AND deletedAt IS NULL", userId)
+func GetUserDetail(db *sql.DB, id string) (models.UserDetail, error) {
+	row := db.QueryRow("SELECT id, email, username, fullName, gender, avatar, dateOfBirth, role FROM users WHERE id = ? AND deletedAt IS NULL", id)
 
 	var user models.UserDetail
 	if err := row.Scan(&user.ID, &user.Email, &user.Username, &user.FullName, &user.Gender, &user.Avatar, &user.DateOfBirth, &user.Role); err != nil {
@@ -734,7 +734,7 @@ func GetUserDetail(db *sql.DB, userId string) (models.UserDetail, error) {
 // @Tags User
 // @Security BearerAuth
 // @Produce json
-// @Param userId path int true "User ID"
+// @Param id path int true "User ID"
 // @Success 200 {object} models.UserDetail
 // @Failure 404 {object} models.Error
 // @Failure 500 {object} models.Error
@@ -742,7 +742,7 @@ func GetUserDetail(db *sql.DB, userId string) (models.UserDetail, error) {
 func GetUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID := c.Param("id")
-		currentUserID, _ := c.Get("userId")
+		currentUserID, _ := c.Get("id")
 		currentUserRole, _ := c.Get("role")
 
 		// Check permissions
