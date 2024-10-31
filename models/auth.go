@@ -13,8 +13,8 @@ type LoginResponse struct {
 }
 
 type AccessTokenResponse struct {
-	AccessToken string `json:"accessToken"`
-	ExpiresIn   int64  `json:"expiresIn"`
+	AccessToken string `json:"accessToken" validate:"required"`
+	ExpiresIn   int64  `json:"expiresIn" validate:"required"`
 }
 
 type ForgotPasswordRequest struct {

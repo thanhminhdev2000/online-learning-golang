@@ -26,10 +26,9 @@ type CreateUserRequest struct {
 	Username    string     `json:"username" validate:"required,min=3,max=50"`
 	FullName    string     `json:"fullName" validate:"required"`
 	Password    string     `json:"password" validate:"required,min=6"`
-	Gender      UserGender `json:"gender" validate:"required,oneof=female male other prefer_not_to_say"`
+	Gender      UserGender `json:"gender" validate:"required"`
 	Avatar      string     `json:"avatar"`
 	DateOfBirth string     `json:"dateOfBirth" validate:"required,datetime=2006-01-02"`
-	PhoneNumber string     `json:"phoneNumber" validate:"omitempty,e164"`
 	Role        UserRole   `json:"role"`
 }
 
@@ -41,7 +40,6 @@ type UserDetail struct {
 	Gender      UserGender `json:"gender" validate:"required"`
 	Avatar      string     `json:"avatar,omitempty"`
 	DateOfBirth string     `json:"dateOfBirth" validate:"required,datetime=2006-01-02"`
-	PhoneNumber string     `json:"phoneNumber,omitempty" validate:"omitempty,e164"`
 	Role        UserRole   `json:"role" validate:"required"`
 }
 
@@ -55,24 +53,17 @@ type UpdateUserResponse struct {
 	User    UserDetail `json:"user" validate:"required"`
 }
 
-
 type PasswordUpdateRequest struct {
 	CurrentPassword string `json:"currentPassword" validate:"required,min=6"`
 	NewPassword     string `json:"newPassword" validate:"required,min=6"`
 }
 
-type UserResponse struct {
-	Data   []UserDetail `json:"data" validate:"required"`
-	Paging PagingInfo   `json:"paging" validate:"required"`
-}
-
-type PagingInfo struct {
-	Page       int `json:"page" validate:"required"`
-	Limit      int `json:"limit" validate:"required"`
-	TotalCount int `json:"totalCount" validate:"required"`
-}
-
 type CreateUserResponse struct {
-	Message string     `json:"message"`
-	User    UserDetail `json:"user"`
+	Message string     `json:"message" validate:"required"`
+	User    UserDetail `json:"user" validate:"required"`
+}
+
+type UserListResponse struct {
+	Data   []UserDetail `json:"data" validate:"required"`
+	Paging Paging       `json:"paging" validate:"required"`
 }

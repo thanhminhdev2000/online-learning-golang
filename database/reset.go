@@ -89,25 +89,18 @@ func DropPurchasesTable(db *sql.DB) error {
 func CreateUsersTable(db *sql.DB) error {
 	query := `
     CREATE TABLE IF NOT EXISTS users (
-        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(100) NOT NULL UNIQUE,
-        username VARCHAR(50) NOT NULL UNIQUE,
-        fullName VARCHAR(100) NOT NULL,
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(50) NOT NULL UNIQUE,
+        username VARCHAR(20) NOT NULL UNIQUE,
+        fullName VARCHAR(50) NOT NULL,
         password VARCHAR(255) NOT NULL,
-        gender ENUM('male', 'female', 'other') NOT NULL DEFAULT 'male',
-        avatar VARCHAR(255) DEFAULT NULL,
+        gender ENUM('male', 'female') NOT NULL DEFAULT 'male', 
+        avatar VARCHAR(255) NOT NULL,
         dateOfBirth DATE NOT NULL,
         role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
-        lastLoginAt TIMESTAMP NULL DEFAULT NULL,
-        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        deletedAt TIMESTAMP NULL DEFAULT NULL,
-        INDEX idx_email (email),
-        INDEX idx_username (username),
-        INDEX idx_status (status),
-        INDEX idx_deleted (deletedAt)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
-
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        deletedAt TIMESTAMP NULL DEFAULT NULL
+    );`
 	_, err := db.Exec(query)
 	if err != nil {
 		return fmt.Errorf("failed to create users table: %w", err)
@@ -117,27 +110,21 @@ func CreateUsersTable(db *sql.DB) error {
 
 func CreateResetPasswordTokensTable(db *sql.DB) error {
 	query := `
-    CREATE TABLE IF NOT EXISTS reset_pw_tokens (
-        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        token VARCHAR(64) NOT NULL UNIQUE,
-        userId INT UNSIGNED NOT NULL,
-        expiry TIMESTAMP NOT NULL,
-        isUsed BOOLEAN NOT NULL DEFAULT FALSE,
-        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
-        INDEX idx_token (token),
-        INDEX idx_user_expiry (userId, expiry),
-        INDEX idx_used_expiry (isUsed, expiry)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
+	CREATE TABLE IF NOT EXISTS reset_pw_tokens (
+		token VARCHAR(64) PRIMARY KEY,
+		userId INT NOT NULL,
+		expiry TIMESTAMP NOT NULL,
+		createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+	);`
 
 	_, err := db.Exec(query)
 	if err != nil {
 		return fmt.Errorf("failed to create reset_pw_tokens table: %w", err)
 	}
+
 	return nil
 }
-
 func CreateClassesTable(db *sql.DB) error {
 	query := `
     CREATE TABLE IF NOT EXISTS classes (

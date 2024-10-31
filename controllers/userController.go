@@ -39,10 +39,10 @@ func createUserCommon(db *sql.DB, user *models.CreateUserRequest) (*models.UserD
 	defer tx.Rollback()
 
 	result, err := tx.Exec(`
-		INSERT INTO users (email, username, fullName, password, gender, avatar, dateOfBirth, role, phoneNumber) 
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		INSERT INTO users (email, username, fullName, password, gender, avatar, dateOfBirth, role) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		user.Email, user.Username, user.FullName, hashedPassword,
-		user.Gender, user.Avatar, user.DateOfBirth, user.Role, user.PhoneNumber)
+		user.Gender, user.Avatar, user.DateOfBirth, user.Role)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register user: %v", err)
 	}
@@ -60,7 +60,7 @@ func createUserCommon(db *sql.DB, user *models.CreateUserRequest) (*models.UserD
 		userID).Scan(
 		&createdUser.ID, &createdUser.Email, &createdUser.Username,
 		&createdUser.FullName, &createdUser.Gender, &createdUser.Avatar,
-		&createdUser.DateOfBirth, &createdUser.Role, &createdUser.PhoneNumber)
+		&createdUser.DateOfBirth, &createdUser.Role)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch created user: %v", err)
 	}
@@ -645,7 +645,7 @@ func DeleteUser(db *sql.DB) gin.HandlerFunc {
 // @Security BearerAuth
 // @Produce json
 // @Param data query models.UserQueryParams false "Filter"
-// @Success 200 {object} models.UserResponse
+// @Success 200 {object} models.UserListResponse
 // @Failure 500 {object} models.Error
 // @Router /users/ [get]
 func GetUsers(db *sql.DB) gin.HandlerFunc {
@@ -706,12 +706,12 @@ func GetUsers(db *sql.DB) gin.HandlerFunc {
 			users = append(users, user)
 		}
 
-		c.JSON(http.StatusOK, models.UserResponse{
+		c.JSON(http.StatusOK, models.UserListResponse{
 			Data: users,
-			Paging: models.PagingInfo{
-				Page:       page,
-				Limit:      limit,
-				TotalCount: totalCount,
+			Paging: models.Paging{
+				Page:  page,
+				Limit: limit,
+				Total: totalCount,
 			},
 		})
 	}

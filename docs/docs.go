@@ -336,7 +336,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.PaginatedResponse"
+                            "$ref": "#/definitions/models.CourseListResponse"
                         }
                     },
                     "400": {
@@ -501,43 +501,37 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Subject ID",
                         "name": "subjectId",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
                         "description": "Course Title",
                         "name": "title",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
                         "description": "Course Description",
                         "name": "description",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "number",
                         "description": "Course Price",
                         "name": "price",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "string",
                         "description": "Instructor Name",
                         "name": "instructor",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "file",
                         "description": "Thumbnail Image",
                         "name": "thumbnail",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -914,7 +908,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.UserResponse"
+                            "$ref": "#/definitions/models.UserListResponse"
                         }
                     },
                     "500": {
@@ -1035,7 +1029,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "userId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -1082,7 +1076,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "userId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -1138,7 +1132,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "userId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -1193,7 +1187,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "userId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -1261,7 +1255,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "User ID",
-                        "name": "userId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -1367,6 +1361,15 @@ const docTemplate = `{
         },
         "models.Course": {
             "type": "object",
+            "required": [
+                "description",
+                "id",
+                "instructor",
+                "price",
+                "subjectId",
+                "thumbnailUrl",
+                "title"
+            ],
             "properties": {
                 "description": {
                     "type": "string"
@@ -1388,6 +1391,24 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "models.CourseListResponse": {
+            "type": "object",
+            "required": [
+                "data",
+                "paging"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Course"
+                    }
+                },
+                "paging": {
+                    "$ref": "#/definitions/models.Paging"
                 }
             }
         },
@@ -1415,24 +1436,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gender": {
-                    "enum": [
-                        "female",
-                        "male",
-                        "other",
-                        "prefer_not_to_say"
-                    ],
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.UserGender"
-                        }
-                    ]
+                    "$ref": "#/definitions/models.UserGender"
                 },
                 "password": {
                     "type": "string",
                     "minLength": 6
-                },
-                "phoneNumber": {
-                    "type": "string"
                 },
                 "role": {
                     "$ref": "#/definitions/models.UserRole"
@@ -1446,6 +1454,10 @@ const docTemplate = `{
         },
         "models.CreateUserResponse": {
             "type": "object",
+            "required": [
+                "message",
+                "user"
+            ],
             "properties": {
                 "message": {
                     "type": "string"
@@ -1500,6 +1512,9 @@ const docTemplate = `{
         },
         "models.Error": {
             "type": "object",
+            "required": [
+                "error"
+            ],
             "properties": {
                 "error": {
                     "type": "string"
@@ -1557,50 +1572,21 @@ const docTemplate = `{
         },
         "models.Message": {
             "type": "object",
+            "required": [
+                "message"
+            ],
             "properties": {
                 "message": {
                     "type": "string"
                 }
             }
         },
-        "models.PaginatedResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "meta": {
-                    "$ref": "#/definitions/models.Pagination"
-                }
-            }
-        },
-        "models.Pagination": {
-            "type": "object",
-            "properties": {
-                "hasNext": {
-                    "type": "boolean"
-                },
-                "hasPrevious": {
-                    "type": "boolean"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "totalPages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.PagingInfo": {
+        "models.Paging": {
             "type": "object",
             "required": [
                 "limit",
                 "page",
-                "totalCount"
+                "total"
             ],
             "properties": {
                 "limit": {
@@ -1609,7 +1595,7 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "totalCount": {
+                "total": {
                     "type": "integer"
                 }
             }
@@ -1707,9 +1693,6 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "phoneNumber": {
-                    "type": "string"
-                },
                 "role": {
                     "$ref": "#/definitions/models.UserRole"
                 },
@@ -1731,7 +1714,7 @@ const docTemplate = `{
                 "GenderOther"
             ]
         },
-        "models.UserResponse": {
+        "models.UserListResponse": {
             "type": "object",
             "required": [
                 "data",
@@ -1745,7 +1728,7 @@ const docTemplate = `{
                     }
                 },
                 "paging": {
-                    "$ref": "#/definitions/models.PagingInfo"
+                    "$ref": "#/definitions/models.Paging"
                 }
             }
         },

@@ -57,6 +57,26 @@ definitions:
         type: string
       title:
         type: string
+    required:
+    - description
+    - id
+    - instructor
+    - price
+    - subjectId
+    - thumbnailUrl
+    - title
+    type: object
+  models.CourseListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Course'
+        type: array
+      paging:
+        $ref: '#/definitions/models.Paging'
+    required:
+    - data
+    - paging
     type: object
   models.CreateUserRequest:
     properties:
@@ -69,17 +89,9 @@ definitions:
       fullName:
         type: string
       gender:
-        allOf:
-        - $ref: '#/definitions/models.UserGender'
-        enum:
-        - female
-        - male
-        - other
-        - prefer_not_to_say
+        $ref: '#/definitions/models.UserGender'
       password:
         minLength: 6
-        type: string
-      phoneNumber:
         type: string
       role:
         $ref: '#/definitions/models.UserRole'
@@ -101,6 +113,9 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/models.UserDetail'
+    required:
+    - message
+    - user
     type: object
   models.Document:
     properties:
@@ -137,6 +152,8 @@ definitions:
     properties:
       error:
         type: string
+    required:
+    - error
     type: object
   models.ForgotPasswordRequest:
     properties:
@@ -175,40 +192,21 @@ definitions:
     properties:
       message:
         type: string
+    required:
+    - message
     type: object
-  models.PaginatedResponse:
+  models.Paging:
     properties:
-      data: {}
-      meta:
-        $ref: '#/definitions/models.Pagination'
-    type: object
-  models.Pagination:
-    properties:
-      hasNext:
-        type: boolean
-      hasPrevious:
-        type: boolean
       limit:
         type: integer
       page:
         type: integer
       total:
         type: integer
-      totalPages:
-        type: integer
-    type: object
-  models.PagingInfo:
-    properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      totalCount:
-        type: integer
     required:
     - limit
     - page
-    - totalCount
+    - total
     type: object
   models.PasswordUpdateRequest:
     properties:
@@ -267,8 +265,6 @@ definitions:
         $ref: '#/definitions/models.UserGender'
       id:
         type: integer
-      phoneNumber:
-        type: string
       role:
         $ref: '#/definitions/models.UserRole'
       username:
@@ -292,14 +288,14 @@ definitions:
     - GenderFemale
     - GenderMale
     - GenderOther
-  models.UserResponse:
+  models.UserListResponse:
     properties:
       data:
         items:
           $ref: '#/definitions/models.UserDetail'
         type: array
       paging:
-        $ref: '#/definitions/models.PagingInfo'
+        $ref: '#/definitions/models.Paging'
     required:
     - data
     - paging
@@ -530,7 +526,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.PaginatedResponse'
+            $ref: '#/definitions/models.CourseListResponse'
         "400":
           description: Bad Request
           schema:
@@ -665,32 +661,26 @@ paths:
       - description: Subject ID
         in: formData
         name: subjectId
-        required: true
         type: integer
       - description: Course Title
         in: formData
         name: title
-        required: true
         type: string
       - description: Course Description
         in: formData
         name: description
-        required: true
         type: string
       - description: Course Price
         in: formData
         name: price
-        required: true
         type: number
       - description: Instructor Name
         in: formData
         name: instructor
-        required: true
         type: string
       - description: Thumbnail Image
         in: formData
         name: thumbnail
-        required: true
         type: file
       produces:
       - application/json
@@ -912,7 +902,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.UserResponse'
+            $ref: '#/definitions/models.UserListResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -958,7 +948,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: userId
+        name: id
         required: true
         type: integer
       responses:
@@ -988,7 +978,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: userId
+        name: id
         required: true
         type: integer
       produces:
@@ -1018,7 +1008,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: userId
+        name: id
         required: true
         type: integer
       - description: User data
@@ -1060,7 +1050,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: userId
+        name: id
         required: true
         type: integer
       - description: User Avatar
@@ -1105,7 +1095,7 @@ paths:
       parameters:
       - description: User ID
         in: path
-        name: userId
+        name: id
         required: true
         type: integer
       - description: Password data

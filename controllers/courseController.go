@@ -171,12 +171,12 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 // @Accept       multipart/form-data
 // @Produce      json
 // @Param        id          path      int     true   "Course ID"
-// @Param        subjectId   formData  int     true   "Subject ID"
-// @Param        title       formData  string  true   "Course Title"
-// @Param        description formData  string  true   "Course Description"
-// @Param        price       formData  number  true   "Course Price"
-// @Param        instructor  formData  string  true   "Instructor Name"
-// @Param        thumbnail   formData  file    true   "Thumbnail Image"
+// @Param        subjectId   formData  int     false  "Subject ID"
+// @Param        title       formData  string  false  "Course Title"
+// @Param        description formData  string  false  "Course Description"
+// @Param        price       formData  number  false  "Course Price"
+// @Param        instructor  formData  string  false  "Instructor Name"
+// @Param        thumbnail   formData  file    false  "Thumbnail Image"
 // @Success      200         {object}  models.Course
 // @Failure      400         {object}  models.Error
 // @Failure      404         {object}  models.Error
@@ -184,7 +184,6 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 // @Router       /courses/{id} [put]
 func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get the course ID from the URL parameter
 		idStr := c.Param("id")
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
@@ -192,7 +191,6 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Get the existing course from the database
 		var existingCourse models.Course
 		query := `SELECT id, subjectId, title, thumbnailUrl, description, price, instructor FROM courses WHERE id = ?`
 		err = db.QueryRow(query, id).Scan(&existingCourse.ID, &existingCourse.SubjectID, &existingCourse.Title, &existingCourse.ThumbnailURL, &existingCourse.Description, &existingCourse.Price, &existingCourse.Instructor)
@@ -206,59 +204,58 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 			}
 		}
 
-		// Parse form data
 		subjectIdStr := c.PostForm("subjectId")
 		title := c.PostForm("title")
 		description := c.PostForm("description")
 		priceStr := c.PostForm("price")
 		instructor := c.PostForm("instructor")
 
-		// Validate required fields
-		if subjectIdStr == "" || title == "" || description == "" || priceStr == "" || instructor == "" {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "All fields are required"})
-			return
+		// Update fields only if they are provided
+		if subjectIdStr != "" {
+			subjectId, err := strconv.Atoi(subjectIdStr)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid subjectId"})
+				return
+			}
+			existingCourse.SubjectID = subjectId
 		}
 
-		// Convert subjectId and price to appropriate types
-		subjectId, err := strconv.Atoi(subjectIdStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid subjectId"})
-			return
+		if title != "" {
+			if len(title) < 3 || len(title) > 100 {
+				c.JSON(http.StatusBadRequest, models.Error{Error: "Title must be between 3 and 100 characters"})
+				return
+			}
+			existingCourse.Title = title
 		}
 
-		price, err := strconv.ParseFloat(priceStr, 64)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid price"})
-			return
+		if description != "" {
+			if len(description) < 10 || len(description) > 1000 {
+				c.JSON(http.StatusBadRequest, models.Error{Error: "Description must be between 10 and 1000 characters"})
+				return
+			}
+			existingCourse.Description = description
 		}
 
-		// Additional validations
-		if price <= 0 {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Price must be greater than 0"})
-			return
+		if priceStr != "" {
+			price, err := strconv.ParseFloat(priceStr, 64)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid price"})
+				return
+			}
+			if price <= 0 {
+				c.JSON(http.StatusBadRequest, models.Error{Error: "Price must be greater than 0"})
+				return
+			}
+			existingCourse.Price = price
 		}
 
-		if len(title) < 3 || len(title) > 100 {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Title must be between 3 and 100 characters"})
-			return
+		if instructor != "" {
+			existingCourse.Instructor = instructor
 		}
-
-		if len(description) < 10 || len(description) > 1000 {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "Description must be between 10 and 1000 characters"})
-			return
-		}
-
-		// Update basic course information
-		existingCourse.SubjectID = subjectId
-		existingCourse.Title = title
-		existingCourse.Description = description
-		existingCourse.Price = price
-		existingCourse.Instructor = instructor
 
 		// Handle optional thumbnail update
 		file, err := c.FormFile("thumbnail")
 		if err == nil {
-			// Validate file type
 			if file.Header.Get("Content-Type") != "image/jpeg" &&
 				file.Header.Get("Content-Type") != "image/png" &&
 				file.Header.Get("Content-Type") != "image/gif" {
@@ -273,7 +270,6 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 			}
 			defer fileContent.Close()
 
-			// Setup Cloudinary
 			cld, err := utils.SetupCloudinary()
 			if err != nil {
 				log.Printf("Error setting up Cloudinary: %v", err)
@@ -281,7 +277,6 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 				return
 			}
 
-			// Upload new thumbnail
 			thumbnailURL, err := utils.UploadImage(cld, fileContent)
 			if err != nil {
 				log.Printf("Error uploading thumbnail: %v", err)
@@ -289,10 +284,8 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 				return
 			}
 
-			// Delete old thumbnail
 			if err := utils.DeleteImage(cld, existingCourse.ThumbnailURL); err != nil {
 				log.Printf("Failed to delete old thumbnail: %v", err)
-				// Continue with update even if deletion fails
 			}
 
 			existingCourse.ThumbnailURL = thumbnailURL
@@ -484,7 +477,7 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 // @Param        search   query    string  false  "Search in title and description"
 // @Param        sort     query    string  false  "Sort field (title, price) (default: id)"
 // @Param        order    query    string  false  "Sort order (asc, desc) (default: asc)"
-// @Success      200      {object} models.PaginatedResponse
+// @Success      200      {object} models.CourseListResponse
 // @Failure      400      {object} models.Error
 // @Failure      500      {object} models.Error
 // @Router       /courses [get]
@@ -548,14 +541,11 @@ func GetCourses(db *sql.DB) gin.HandlerFunc {
 			params = append(params, searchParam, searchParam)
 		}
 
-		// Add sorting
 		query += fmt.Sprintf(" ORDER BY c.%s %s", sortField, sortOrder)
 
-		// Add pagination
 		query += " LIMIT ? OFFSET ?"
 		params = append(params, limit, offset)
 
-		// Get total count
 		var total int
 		err := db.QueryRow(countQuery, params[:len(params)-2]...).Scan(&total)
 		if err != nil {
@@ -577,14 +567,9 @@ func GetCourses(db *sql.DB) gin.HandlerFunc {
 		}
 		defer rows.Close()
 
-		type CourseWithSubject struct {
-			models.Course
-			SubjectName string `json:"subjectName"`
-		}
-
-		courses := make([]CourseWithSubject, 0)
+		courses := make([]models.Course, 0)
 		for rows.Next() {
-			var course CourseWithSubject
+			var course models.Course
 			err := rows.Scan(
 				&course.ID,
 				&course.SubjectID,
@@ -593,7 +578,6 @@ func GetCourses(db *sql.DB) gin.HandlerFunc {
 				&course.Description,
 				&course.Price,
 				&course.Instructor,
-				&course.SubjectName,
 			)
 			if err != nil {
 				log.Printf("Error scanning course: %v", err)
@@ -613,20 +597,12 @@ func GetCourses(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Calculate pagination metadata
-		totalPages := (total + limit - 1) / limit
-		hasNext := page < totalPages
-		hasPrev := page > 1
-
-		response := gin.H{
-			"data": courses,
-			"meta": gin.H{
-				"total":       total,
-				"page":        page,
-				"limit":       limit,
-				"totalPages":  totalPages,
-				"hasNext":     hasNext,
-				"hasPrevious": hasPrev,
+		response := models.CourseListResponse{
+			Data: courses,
+			Paging: models.Paging{
+				Page:  page,
+				Limit: limit,
+				Total: total,
 			},
 		}
 
