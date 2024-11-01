@@ -5,4 +5,5 @@ type Lesson struct {
 	CourseID int    `json:"courseId" validate:"required"`
 	Title    string `json:"title" validate:"required"`
 	VideoURL string `json:"videoUrl" validate:"required"`
+	Duration int    `json:"duration" validate:"required"`
 }

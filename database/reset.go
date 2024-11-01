@@ -206,6 +206,7 @@ func CreateLessonsTable(db *sql.DB) error {
         courseId INT NOT NULL,
         title VARCHAR(255) NOT NULL,
         videoUrl VARCHAR(255) NOT NULL,
+        duration INT NOT NULL,
         FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
     );`
 	_, err := db.Exec(query)

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"online-learning-golang/models"
@@ -85,8 +86,9 @@ func CreateLesson(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		videoUrl, err := utils.UploadVideo(cld, fileContent)
+		videoUrl, duration, err := utils.UploadVideo(cld, fileContent)
 		if err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, models.Error{
 				Error: "Failed to upload video",
 			})
@@ -97,9 +99,11 @@ func CreateLesson(db *sql.DB) gin.HandlerFunc {
 		lesson.CourseID = courseId
 		lesson.Title = title
 		lesson.VideoURL = videoUrl
+		lesson.Duration = duration
 
-		result, err := tx.Exec("INSERT INTO lessons (courseId, title, videoUrl) VALUES (?, ?, ?)", lesson.CourseID, lesson.Title, lesson.VideoURL)
+		result, err := tx.Exec("INSERT INTO lessons (courseId, title, videoUrl, duration) VALUES (?, ?, ?, ?)", lesson.CourseID, lesson.Title, lesson.VideoURL, 100)
 		if err != nil {
+			fmt.Print(err)
 			c.JSON(http.StatusInternalServerError, models.Error{
 				Error: "Failed to insert lesson into database",
 			})
@@ -202,7 +206,7 @@ func UpdateLesson(db *sql.DB) gin.HandlerFunc {
 				log.Printf("Failed to delete old thumbnail: %v", err)
 			}
 
-			videoUrl, err := utils.UploadVideo(cld, fileContent)
+			videoUrl, duration, err := utils.UploadVideo(cld, fileContent)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, models.Error{
 					Error: "Failed to upload video",
@@ -210,6 +214,7 @@ func UpdateLesson(db *sql.DB) gin.HandlerFunc {
 				return
 			}
 			lesson.VideoURL = videoUrl
+			lesson.Duration = duration
 		}
 
 		tx, err := db.Begin()
@@ -221,7 +226,7 @@ func UpdateLesson(db *sql.DB) gin.HandlerFunc {
 		}
 		defer tx.Rollback()
 
-		_, err = tx.Exec("UPDATE lessons SET title = ?, videoUrl = ? WHERE id = ?", lesson.Title, lesson.VideoURL, lessonId)
+		_, err = tx.Exec("UPDATE lessons SET title = ?, videoUrl = ?, duration = ? WHERE id = ?", lesson.Title, lesson.VideoURL, lesson.Duration, lessonId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{
 				Error: "Failed to update lesson in database",
