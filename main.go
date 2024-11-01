@@ -49,7 +49,9 @@ func main() {
 	defer db.Close()
 
 	if *reset {
-		database.ResetDataBase(db)
+		if err := database.ResetDataBase(db); err != nil {
+			log.Fatalf("Error resetting database: %v", err)
+		}
 		fmt.Println("Database reset successfully!")
 		return
 	}

@@ -6,6 +6,9 @@ definitions:
         type: string
       expiresIn:
         type: integer
+    required:
+    - accessToken
+    - expiresIn
     type: object
   models.Class:
     properties:
@@ -43,12 +46,20 @@ definitions:
     type: object
   models.Course:
     properties:
+      category:
+        type: string
+      classId:
+        type: integer
       description:
         type: string
       id:
         type: integer
       instructor:
         type: string
+      lessons:
+        items:
+          $ref: '#/definitions/models.Lesson'
+        type: array
       price:
         type: number
       subjectId:
@@ -58,9 +69,12 @@ definitions:
       title:
         type: string
     required:
+    - category
+    - classId
     - description
     - id
     - instructor
+    - lessons
     - price
     - subjectId
     - thumbnailUrl
@@ -161,6 +175,22 @@ definitions:
         type: string
     required:
     - email
+    type: object
+  models.Lesson:
+    properties:
+      courseId:
+        type: integer
+      id:
+        type: integer
+      title:
+        type: string
+      videoUrl:
+        type: string
+    required:
+    - courseId
+    - id
+    - title
+    - videoUrl
     type: object
   models.LoginRequest:
     properties:
@@ -492,7 +522,7 @@ paths:
       summary: Send email contact
       tags:
       - Contact
-  /courses:
+  /courses/:
     get:
       description: Retrieve a list of all courses with optional filtering and pagination
       parameters:
@@ -537,7 +567,7 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Get all courses
       tags:
-      - courses
+      - Course
     post:
       consumes:
       - multipart/form-data
@@ -590,7 +620,7 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Create a new course
       tags:
-      - courses
+      - Course
   /courses/{id}:
     delete:
       description: Delete a course by ID
@@ -617,7 +647,7 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Delete a course
       tags:
-      - courses
+      - Course
     get:
       description: Retrieve a single course using its ID
       parameters:
@@ -647,7 +677,7 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Get a course by ID
       tags:
-      - courses
+      - Course
     put:
       consumes:
       - multipart/form-data
@@ -703,7 +733,7 @@ paths:
             $ref: '#/definitions/models.Error'
       summary: Update an existing course
       tags:
-      - courses
+      - Course
   /documents/:
     get:
       description: Returns a list of documents, which can be filtered by `subjectId`
@@ -850,7 +880,7 @@ paths:
       summary: Update a document, including replacing its file
       tags:
       - Document
-  /documents/subjects:
+  /documents/classes:
     get:
       description: List of classes with their subjects and document counts
       responses:
@@ -867,6 +897,116 @@ paths:
       summary: List of classes with their subjects and document counts
       tags:
       - Document
+  /lessons/:
+    post:
+      consumes:
+      - application/json
+      description: Create a new lesson with video upload
+      parameters:
+      - description: Course ID
+        in: formData
+        name: courseId
+        required: true
+        type: integer
+      - description: Lesson Title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Video File
+        in: formData
+        name: video
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Lesson'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Create a new lesson
+      tags:
+      - Lesson
+  /lessons/{id}:
+    delete:
+      description: Delete a lesson by ID
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete an existing lesson
+      tags:
+      - Lesson
+    put:
+      consumes:
+      - application/json
+      description: Update the title and video of a lesson
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Lesson Title
+        in: formData
+        name: title
+        type: string
+      - description: Video File
+        in: formData
+        name: video
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Lesson'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - BearerAuth: []
+      summary: Update an existing lesson
+      tags:
+      - Lesson
   /users/:
     get:
       description: Retrieve a list of all users, with optional filters for email,

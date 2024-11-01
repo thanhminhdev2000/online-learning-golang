@@ -16,7 +16,7 @@ import (
 // CreateCourse handles the creation of a new course
 // @Summary      Create a new course
 // @Description  Create a new course with the provided details
-// @Tags         courses
+// @Tags         Course
 // @Accept       multipart/form-data
 // @Produce      json
 // @Param        subjectId   formData  int     true   "Subject ID"
@@ -28,7 +28,7 @@ import (
 // @Success      200         {object}  models.Course
 // @Failure      400         {object}  models.Error
 // @Failure      500         {object}  models.Error
-// @Router       /courses [post]
+// @Router       /courses/ [post]
 func CreateCourse(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
@@ -42,7 +42,7 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 
 		// Validate required fields
 		if subjectIdStr == "" || title == "" || description == "" || priceStr == "" || instructor == "" {
-			c.JSON(http.StatusBadRequest, models.Error{Error: "All fields are required"})
+			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
 			return
 		}
 
@@ -59,7 +59,6 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Additional validations
 		if price <= 0 {
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Price must be greater than 0"})
 			return
@@ -74,14 +73,13 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Description must be between 10 and 1000 characters"})
 			return
 		}
-		// Get the thumbnail file
+
 		file, err := c.FormFile("thumbnail")
 		if err != nil {
 			c.JSON(http.StatusBadRequest, models.Error{Error: "No file provided"})
 			return
 		}
 
-		// Validate file type
 		if file.Header.Get("Content-Type") != "image/jpeg" &&
 			file.Header.Get("Content-Type") != "image/png" &&
 			file.Header.Get("Content-Type") != "image/gif" {
@@ -96,7 +94,6 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 		}
 		defer fileContent.Close()
 
-		// Setup Cloudinary
 		cld, err := utils.SetupCloudinary()
 		if err != nil {
 			log.Printf("Error setting up Cloudinary: %v", err)
@@ -104,7 +101,6 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Upload the file to Cloudinary
 		thumbnailUrl, err := utils.UploadImage(cld, fileContent)
 		if err != nil {
 			log.Printf("Error uploading thumbnail: %v", err)
@@ -112,7 +108,6 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Create the course struct
 		course = models.Course{
 			SubjectID:    subjectId,
 			Title:        title,
@@ -122,7 +117,6 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 			Instructor:   instructor,
 		}
 
-		// Insert into database with transaction
 		tx, err := db.Begin()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to start transaction"})
@@ -167,7 +161,7 @@ func CreateCourse(db *sql.DB) gin.HandlerFunc {
 // UpdateCourse handles updating an existing course
 // @Summary      Update an existing course
 // @Description  Update course details by ID
-// @Tags         courses
+// @Tags         Course
 // @Accept       multipart/form-data
 // @Produce      json
 // @Param        id          path      int     true   "Course ID"
@@ -307,7 +301,7 @@ func UpdateCourse(db *sql.DB) gin.HandlerFunc {
 // DeleteCourse handles deleting a course
 // @Summary      Delete a course
 // @Description  Delete a course by ID
-// @Tags         courses
+// @Tags         Course
 // @Produce      json
 // @Param        id   path      int  true  "Course ID"
 // @Success      200  {object}  models.Message
@@ -391,7 +385,7 @@ func DeleteCourse(db *sql.DB) gin.HandlerFunc {
 // GetCourse handles fetching a single course by ID
 // @Summary      Get a course by ID
 // @Description  Retrieve a single course using its ID
-// @Tags         courses
+// @Tags         Course
 // @Produce      json
 // @Param        id   path      int  true  "Course ID"
 // @Success      200  {object}  models.Course
@@ -401,7 +395,6 @@ func DeleteCourse(db *sql.DB) gin.HandlerFunc {
 // @Router       /courses/{id} [get]
 func GetCourse(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Get the course ID from the URL parameter
 		idStr := c.Param("id")
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
@@ -411,35 +404,34 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Retrieve the course with subject information using JOIN
-		var course struct {
-			models.Course
-			SubjectName string `json:"subjectName"`
-		}
+		var course models.Course
 
 		query := `
 			SELECT 
 				c.id, 
-				c.subjectId, 
+				cls.id,
+				s.id, 
+				CONCAT(s.name, ' - ', cls.name) AS category,
 				c.title, 
 				c.thumbnailUrl, 
 				c.description, 
 				c.price, 
-				c.instructor,
-				s.name as subject_name
+				c.instructor
 			FROM courses c
 			LEFT JOIN subjects s ON c.subjectId = s.id
+			LEFT JOIN classes cls ON s.classId = cls.id
 			WHERE c.id = ?`
 
 		err = db.QueryRow(query, id).Scan(
 			&course.ID,
+			&course.ClassID,
 			&course.SubjectID,
+			&course.Category,
 			&course.Title,
 			&course.ThumbnailURL,
 			&course.Description,
 			&course.Price,
 			&course.Instructor,
-			&course.SubjectName,
 		)
 
 		if err != nil {
@@ -456,11 +448,40 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Validate the retrieved data
-		if course.Title == "" || course.Description == "" {
-			log.Printf("Warning: Course %d has invalid data: title=%s, desc=%s",
-				id, course.Title, course.Description)
+		var lessons []models.Lesson
+
+		lessonsQuery := `SELECT id, courseId, title, videoUrl FROM lessons WHERE courseId = ?`
+		rows, err := db.Query(lessonsQuery, id)
+		if err != nil {
+			log.Printf("Error retrieving lessons for course %d: %v", id, err)
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to retrieve lessons. Please try again later.",
+			})
+			return
 		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var lesson models.Lesson
+			if err := rows.Scan(&lesson.ID, &lesson.CourseID, &lesson.Title, &lesson.VideoURL); err != nil {
+				log.Printf("Error scanning lesson: %v", err)
+				c.JSON(http.StatusInternalServerError, models.Error{
+					Error: "Failed to process lesson data",
+				})
+				return
+			}
+			lessons = append(lessons, lesson)
+		}
+
+		if err = rows.Err(); err != nil {
+			log.Printf("Error iterating lessons: %v", err)
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to process lessons",
+			})
+			return
+		}
+
+		course.Lessons = lessons
 
 		c.JSON(http.StatusOK, course)
 	}
@@ -469,7 +490,7 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 // GetCourses handles fetching all courses
 // @Summary      Get all courses
 // @Description  Retrieve a list of all courses with optional filtering and pagination
-// @Tags         courses
+// @Tags         Course
 // @Produce      json
 // @Param        page     query    int     false  "Page number (default: 1)"
 // @Param        limit    query    int     false  "Items per page (default: 10)"
@@ -480,7 +501,7 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 // @Success      200      {object} models.CourseListResponse
 // @Failure      400      {object} models.Error
 // @Failure      500      {object} models.Error
-// @Router       /courses [get]
+// @Router       /courses/ [get]
 func GetCourses(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Parse query parameters
@@ -513,15 +534,17 @@ func GetCourses(db *sql.DB) gin.HandlerFunc {
 		query := `
 			SELECT 
 				c.id, 
-				c.subjectId, 
+				cls.id,
+				s.id, 
+				CONCAT(s.name, ' - ', cls.name) AS category,
 				c.title, 
 				c.thumbnailUrl, 
 				c.description, 
 				c.price, 
-				c.instructor,
-				s.name as subject_name
+				c.instructor
 			FROM courses c
 			LEFT JOIN subjects s ON c.subjectId = s.id
+			LEFT JOIN classes cls ON s.classId = cls.id
 			WHERE 1=1`
 
 		countQuery := "SELECT COUNT(*) FROM courses c WHERE 1=1"
@@ -572,7 +595,9 @@ func GetCourses(db *sql.DB) gin.HandlerFunc {
 			var course models.Course
 			err := rows.Scan(
 				&course.ID,
+				&course.ClassID,
 				&course.SubjectID,
+				&course.Category,
 				&course.Title,
 				&course.ThumbnailURL,
 				&course.Description,

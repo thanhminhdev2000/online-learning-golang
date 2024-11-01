@@ -12,14 +12,6 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 )
 
-var (
-	allowedImageTypes = map[string]bool{
-		"image/jpeg": true,
-		"image/png":  true,
-		"image/gif":  true,
-	}
-)
-
 func SetupCloudinary() (*cloudinary.Cloudinary, error) {
 	cloudName := os.Getenv("CLOUDINARY_CLOUD_NAME")
 	apiKey := os.Getenv("CLOUDINARY_API_KEY")
@@ -37,17 +29,10 @@ func SetupCloudinary() (*cloudinary.Cloudinary, error) {
 	return cld, nil
 }
 
-func ValidateImageType(file *multipart.FileHeader) error {
-	if !allowedImageTypes[file.Header.Get("Content-Type")] {
-		return fmt.Errorf("invalid file type. Only JPEG, PNG and GIF are allowed")
-	}
-	return nil
-}
-
 func UploadImage(cld *cloudinary.Cloudinary, file multipart.File) (string, error) {
 	ctx := context.Background()
 	uploadResult, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
-		Folder: "courses",
+		Folder: "images",
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to upload image: %v", err)
@@ -75,4 +60,36 @@ func DeleteImage(cld *cloudinary.Cloudinary, imageURL string) error {
 	}
 
 	return nil
-} 
+}
+
+func UploadVideo(cld *cloudinary.Cloudinary, file multipart.File) (string, error) {
+	ctx := context.Background()
+	uploadResult, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
+		Folder: "videos",
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to upload video: %v", err)
+	}
+	return uploadResult.SecureURL, nil
+}
+
+func DeleteVideo(cld *cloudinary.Cloudinary, videoURL string) error {
+	if videoURL == "" {
+		return nil
+	}
+
+	parts := strings.Split(videoURL, "/")
+	if len(parts) < 2 {
+		return fmt.Errorf("invalid video URL format")
+	}
+	filename := parts[len(parts)-1]
+	publicID := "videos/" + strings.TrimSuffix(filename, filepath.Ext(filename))
+
+	ctx := context.Background()
+	_, err := cld.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: publicID})
+	if err != nil {
+		return fmt.Errorf("failed to delete video: %v", err)
+	}
+
+	return nil
+}

@@ -5,13 +5,16 @@ import (
 )
 
 type Course struct {
-	ID           int     `json:"id" validate:"required"`
-	SubjectID    int     `json:"subjectId" validate:"required"`
-	Title        string  `json:"title" validate:"required"`
-	ThumbnailURL string  `json:"thumbnailUrl" validate:"required"`
-	Description  string  `json:"description" validate:"required"`
-	Price        float64 `json:"price" validate:"required"`
-	Instructor   string  `json:"instructor" validate:"required"`
+	ID           int      `json:"id" validate:"required"`
+	ClassID      int      `json:"classId,omitempty" validate:"required"`
+	SubjectID    int      `json:"subjectId" validate:"required"`
+	Category     string   `json:"category,omitempty" validate:"required"`
+	Title        string   `json:"title" validate:"required"`
+	ThumbnailURL string   `json:"thumbnailUrl" validate:"required"`
+	Description  string   `json:"description" validate:"required"`
+	Price        float64  `json:"price" validate:"required"`
+	Instructor   string   `json:"instructor" validate:"required"`
+	Lessons      []Lesson `json:"lessons,omitempty" validate:"required"`
 }
 
 // Validation constants

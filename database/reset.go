@@ -95,7 +95,7 @@ func CreateUsersTable(db *sql.DB) error {
         fullName VARCHAR(50) NOT NULL,
         password VARCHAR(255) NOT NULL,
         gender ENUM('male', 'female') NOT NULL DEFAULT 'male', 
-        avatar VARCHAR(255) NOT NULL,
+        avatar VARCHAR(255) NOT NULL DEFAULT "",
         dateOfBirth DATE NOT NULL,
         role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -235,7 +235,7 @@ func CreatePurchasesTable(db *sql.DB) error {
 func InsertTestAccounts(db *sql.DB) error {
 	query := `
 	INSERT INTO users (email, username, fullName, password, gender, dateOfBirth, role)
-	VALUES (?, ?, ?, '$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m', ?, ?, ?)
+	VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 
 	gofakeit.Seed(0)
@@ -260,16 +260,11 @@ func InsertTestAccounts(db *sql.DB) error {
 		IdStr := strconv.Itoa(index)
 		minDate := time.Now().AddDate(-50, 0, 0)
 		maxDate := time.Now().AddDate(-12, 0, 0)
-		_, err := db.Exec(query, gofakeit.Email(), role+IdStr, gofakeit.Name(), gender, gofakeit.DateRange(minDate, maxDate), role)
+		_, err := db.Exec(query, gofakeit.Email(), role+IdStr, gofakeit.Name(), "$2a$10$3q1Qcjx7zzpb3Vs42D6YbexPA4K9pKVA9pA2T8UIo0TjccGmet10m", gender, gofakeit.DateRange(minDate, maxDate), role)
 
 		if err != nil {
-			return fmt.Errorf("failed to insert document")
+			return fmt.Errorf("failed to insert document : %w", err)
 		}
-	}
-
-	_, err := db.Exec(query)
-	if err != nil {
-		return fmt.Errorf("failed to insert test accounts: %w", err)
 	}
 
 	return nil
@@ -464,35 +459,78 @@ func InsertDocumentsData(db *sql.DB) error {
 	return nil
 }
 
-func ResetDataBase(db *sql.DB) {
-	DropResetPasswordTokensTable(db)
-	DropUsersTable(db)
+func ResetDataBase(db *sql.DB) error {
 
-	DropDocumentsTable(db)
-	DropSubjectsTable(db)
-	DropClassesTable(db)
+	if err := DropPurchasesTable(db); err != nil {
+		return err
+	}
+	if err := DropLessonsTable(db); err != nil {
+		return err
+	}
+	if err := DropCoursesTable(db); err != nil {
+		return err
+	}
 
-	DropPurchasesTable(db)
-	DropLessonsTable(db)
-	DropCoursesTable(db)
+	if err := DropDocumentsTable(db); err != nil {
+		return err
+	}
+	if err := DropSubjectsTable(db); err != nil {
+		return err
+	}
+	if err := DropClassesTable(db); err != nil {
+		return err
+	}
+
+	if err := DropResetPasswordTokensTable(db); err != nil {
+		return err
+	}
+	if err := DropUsersTable(db); err != nil {
+		return err
+	}
 
 	// ----------------
 
-	CreateUsersTable(db)
-	CreateResetPasswordTokensTable(db)
+	if err := CreateUsersTable(db); err != nil {
+		return err
+	}
+	if err := CreateResetPasswordTokensTable(db); err != nil {
+		return err
+	}
 
-	CreateClassesTable(db)
-	CreateSubjectsTable(db)
-	CreateDocumentsTable(db)
+	if err := CreateClassesTable(db); err != nil {
+		return err
+	}
+	if err := CreateSubjectsTable(db); err != nil {
+		return err
+	}
+	if err := CreateDocumentsTable(db); err != nil {
+		return err
+	}
 
-	CreateCoursesTable(db)
-	CreateLessonsTable(db)
-	CreatePurchasesTable(db)
+	if err := CreateCoursesTable(db); err != nil {
+		return err
+	}
+	if err := CreateLessonsTable(db); err != nil {
+		return err
+	}
+	if err := CreatePurchasesTable(db); err != nil {
+		return err
+	}
 
 	// ----------------
 
-	InsertTestAccounts(db)
-	InsertClassesData(db)
-	InsertSubjectsData(db)
-	InsertDocumentsData(db)
+	if err := InsertTestAccounts(db); err != nil {
+		return err
+	}
+	if err := InsertClassesData(db); err != nil {
+		return err
+	}
+	if err := InsertSubjectsData(db); err != nil {
+		return err
+	}
+	if err := InsertDocumentsData(db); err != nil {
+		return err
+	}
+
+	return nil
 }

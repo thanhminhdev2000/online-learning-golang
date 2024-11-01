@@ -16,5 +16,5 @@ func UserRoutes(router *gin.RouterGroup, db *sql.DB) {
 	router.PUT("/:id", middleware.AuthMiddleware(), controllers.UpdateUser(db))
 	router.PUT("/:id/password", middleware.AuthMiddleware(), controllers.UpdateUserPassword(db))
 	router.PUT("/:id/avatar", middleware.AuthMiddleware(), controllers.UpdateUserAvatar(db))
-	router.DELETE("/:id", middleware.AuthMiddleware(), controllers.DeleteUser(db))
+	router.DELETE("/:id", middleware.OnlyAdminMiddleware(), controllers.DeleteUser(db))
 }

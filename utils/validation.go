@@ -16,6 +16,16 @@ func IsValidImageType(contentType string) bool {
 	return validTypes[contentType]
 }
 
+func IsValidVideoType(contentType string) bool {
+	var validTypes = map[string]bool{
+		"video/mp4": true,
+		"video/avi": true,
+		"video/mov": true,
+	}
+
+	return validTypes[contentType]
+}
+
 func IsValidEmail(email string) bool {
 	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 	return emailRegex.MatchString(strings.ToLower(email))

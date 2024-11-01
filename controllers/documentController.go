@@ -69,7 +69,7 @@ func GetClasses(db *sql.DB) ([]models.Class, error) {
 // @Tags Document
 // @Success 200 {array} models.Class
 // @Failure 500 {object} models.Error
-// @Router /documents/subjects [get]
+// @Router /documents/classes [get]
 func GetListClass(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		class, err := GetClasses(db)

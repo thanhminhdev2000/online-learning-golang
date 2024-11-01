@@ -34,7 +34,6 @@ func Login(db *sql.DB) gin.HandlerFunc {
 			})
 			return
 		}
-
 		if err := validateLoginInput(loginData); err != nil {
 			c.JSON(http.StatusBadRequest, models.Error{
 				Error: err.Error(),
