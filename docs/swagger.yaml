@@ -522,52 +522,7 @@ paths:
       summary: Send email contact
       tags:
       - Contact
-  /courses/:
-    get:
-      description: Retrieve a list of all courses with optional filtering and pagination
-      parameters:
-      - description: 'Page number (default: 1)'
-        in: query
-        name: page
-        type: integer
-      - description: 'Items per page (default: 10)'
-        in: query
-        name: limit
-        type: integer
-      - description: Filter by subject ID
-        in: query
-        name: subject
-        type: integer
-      - description: Search in title and description
-        in: query
-        name: search
-        type: string
-      - description: 'Sort field (title, price) (default: id)'
-        in: query
-        name: sort
-        type: string
-      - description: 'Sort order (asc, desc) (default: asc)'
-        in: query
-        name: order
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.CourseListResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.Error'
-      summary: Get all courses
-      tags:
-      - Course
+  /courses:
     post:
       consumes:
       - multipart/form-data
@@ -619,6 +574,52 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Create a new course
+      tags:
+      - Course
+  /courses/:
+    get:
+      description: Retrieve a list of all courses with optional filtering and pagination
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10)'
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by subject ID
+        in: query
+        name: subject
+        type: integer
+      - description: Search in title and description
+        in: query
+        name: search
+        type: string
+      - description: 'Sort field (title, price) (default: id)'
+        in: query
+        name: sort
+        type: string
+      - description: 'Sort order (asc, desc) (default: asc)'
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CourseListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get all courses
       tags:
       - Course
   /courses/{id}:

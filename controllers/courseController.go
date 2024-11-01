@@ -28,7 +28,7 @@ import (
 // @Success      200         {object}  models.Course
 // @Failure      400         {object}  models.Error
 // @Failure      500         {object}  models.Error
-// @Router       /courses/ [post]
+// @Router       /courses [post]
 func CreateCourse(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
