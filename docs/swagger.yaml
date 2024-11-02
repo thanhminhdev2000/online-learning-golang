@@ -180,7 +180,11 @@ definitions:
     properties:
       courseId:
         type: integer
+      duration:
+        type: integer
       id:
+        type: integer
+      position:
         type: integer
       title:
         type: string
@@ -188,7 +192,9 @@ definitions:
         type: string
     required:
     - courseId
+    - duration
     - id
+    - position
     - title
     - videoUrl
     type: object
@@ -522,7 +528,52 @@ paths:
       summary: Send email contact
       tags:
       - Contact
-  /courses:
+  /courses/:
+    get:
+      description: Retrieve a list of all courses with optional filtering and pagination
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10)'
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by subject ID
+        in: query
+        name: subject
+        type: integer
+      - description: Search in title and description
+        in: query
+        name: search
+        type: string
+      - description: 'Sort field (title, price) (default: id)'
+        in: query
+        name: sort
+        type: string
+      - description: 'Sort order (asc, desc) (default: asc)'
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CourseListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get all courses
+      tags:
+      - Course
     post:
       consumes:
       - multipart/form-data
@@ -574,52 +625,6 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Create a new course
-      tags:
-      - Course
-  /courses/:
-    get:
-      description: Retrieve a list of all courses with optional filtering and pagination
-      parameters:
-      - description: 'Page number (default: 1)'
-        in: query
-        name: page
-        type: integer
-      - description: 'Items per page (default: 10)'
-        in: query
-        name: limit
-        type: integer
-      - description: Filter by subject ID
-        in: query
-        name: subject
-        type: integer
-      - description: Search in title and description
-        in: query
-        name: search
-        type: string
-      - description: 'Sort field (title, price) (default: id)'
-        in: query
-        name: sort
-        type: string
-      - description: 'Sort order (asc, desc) (default: asc)'
-        in: query
-        name: order
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.CourseListResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/models.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.Error'
-      summary: Get all courses
       tags:
       - Course
   /courses/{id}:
@@ -914,6 +919,11 @@ paths:
         name: title
         required: true
         type: string
+      - description: Position in Course
+        in: formData
+        name: position
+        required: true
+        type: integer
       - description: Video File
         in: formData
         name: video
@@ -980,6 +990,11 @@ paths:
         in: formData
         name: title
         type: string
+      - description: Position in Course
+        in: formData
+        name: position
+        required: true
+        type: integer
       - description: Video File
         in: formData
         name: video

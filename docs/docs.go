@@ -284,7 +284,75 @@ const docTemplate = `{
                 }
             }
         },
-        "/courses": {
+        "/courses/": {
+            "get": {
+                "description": "Retrieve a list of all courses with optional filtering and pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Course"
+                ],
+                "summary": "Get all courses",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by subject ID",
+                        "name": "subject",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search in title and description",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort field (title, price) (default: id)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc, desc) (default: asc)",
+                        "name": "order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.CourseListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new course with the provided details",
                 "consumes": [
@@ -346,76 +414,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.Course"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Error"
-                        }
-                    }
-                }
-            }
-        },
-        "/courses/": {
-            "get": {
-                "description": "Retrieve a list of all courses with optional filtering and pagination",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Course"
-                ],
-                "summary": "Get all courses",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number (default: 1)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Items per page (default: 10)",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Filter by subject ID",
-                        "name": "subject",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Search in title and description",
-                        "name": "search",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort field (title, price) (default: id)",
-                        "name": "sort",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort order (asc, desc) (default: asc)",
-                        "name": "order",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.CourseListResponse"
                         }
                     },
                     "400": {
@@ -885,6 +883,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "integer",
+                        "description": "Position in Course",
+                        "name": "position",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
                         "type": "file",
                         "description": "Video File",
                         "name": "video",
@@ -945,6 +950,13 @@ const docTemplate = `{
                         "description": "Lesson Title",
                         "name": "title",
                         "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Position in Course",
+                        "name": "position",
+                        "in": "formData",
+                        "required": true
                     },
                     {
                         "type": "file",
@@ -1728,7 +1740,9 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "courseId",
+                "duration",
                 "id",
+                "position",
                 "title",
                 "videoUrl"
             ],
@@ -1736,7 +1750,13 @@ const docTemplate = `{
                 "courseId": {
                     "type": "integer"
                 },
+                "duration": {
+                    "type": "integer"
+                },
                 "id": {
+                    "type": "integer"
+                },
+                "position": {
                     "type": "integer"
                 },
                 "title": {

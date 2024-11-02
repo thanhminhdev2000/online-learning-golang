@@ -21,6 +21,7 @@ import (
 // @Produce json
 // @Param courseId formData int true "Course ID"
 // @Param title formData string true "Lesson Title"
+// @Param position formData int true "Position in Course"
 // @Param video formData file true "Video File"
 // @Success 200 {object} models.Lesson
 // @Failure 400 {object} models.Error
@@ -31,10 +32,17 @@ func CreateLesson(db *sql.DB) gin.HandlerFunc {
 
 		courseIdStr := c.PostForm("courseId")
 		title := c.PostForm("title")
+		positionStr := c.PostForm("position")
 
 		courseId, err := strconv.Atoi(courseIdStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid courseId"})
+			return
+		}
+
+		position, err := strconv.Atoi(positionStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid position"})
 			return
 		}
 
@@ -88,7 +96,6 @@ func CreateLesson(db *sql.DB) gin.HandlerFunc {
 
 		videoUrl, duration, err := utils.UploadVideo(cld, fileContent)
 		if err != nil {
-			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, models.Error{
 				Error: "Failed to upload video",
 			})
@@ -100,8 +107,15 @@ func CreateLesson(db *sql.DB) gin.HandlerFunc {
 		lesson.Title = title
 		lesson.VideoURL = videoUrl
 		lesson.Duration = duration
+		lesson.Position = position
 
-		result, err := tx.Exec("INSERT INTO lessons (courseId, title, videoUrl, duration) VALUES (?, ?, ?, ?)", lesson.CourseID, lesson.Title, lesson.VideoURL, 100)
+		_, err = db.Exec("UPDATE lessons SET position = position + 1 WHERE courseId = ? AND position >= ?", courseId, position)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to update existing lessons' positions"})
+			return
+		}
+
+		result, err := tx.Exec("INSERT INTO lessons (courseId, title, videoUrl, duration, position) VALUES (?, ?, ?, ?, ?)", lesson.CourseID, lesson.Title, lesson.VideoURL, lesson.Duration, lesson.Position)
 		if err != nil {
 			fmt.Print(err)
 			c.JSON(http.StatusInternalServerError, models.Error{
@@ -137,6 +151,7 @@ func CreateLesson(db *sql.DB) gin.HandlerFunc {
 // @Produce json
 // @Param id path int true "Lesson ID"
 // @Param title formData string false "Lesson Title"
+// @Param position formData int true "Position in Course"
 // @Param video formData file false "Video File"
 // @Success 200 {object} models.Lesson
 // @Failure 400 {object} models.Error
@@ -153,13 +168,14 @@ func UpdateLesson(db *sql.DB) gin.HandlerFunc {
 		}
 
 		var existingLesson models.Lesson
-		query := `SELECT videoUrl WHERE id = ?`
+		query := `SELECT videoUrl FROM lessons WHERE id = ?`
 		err = db.QueryRow(query, lessonId).Scan(&existingLesson.VideoURL)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusNotFound, models.Error{Error: "Course not found"})
 				return
 			} else {
+				fmt.Println(err)
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to retrieve course"})
 				return
 			}
@@ -168,6 +184,13 @@ func UpdateLesson(db *sql.DB) gin.HandlerFunc {
 		var lesson models.Lesson
 		if title := c.PostForm("title"); title != "" {
 			lesson.Title = title
+		}
+
+		if positionStr := c.PostForm("position"); positionStr != "" {
+			position, err := strconv.Atoi(positionStr)
+			if err == nil {
+				lesson.Position = position
+			}
 		}
 
 		if file, err := c.FormFile("video"); err == nil {
@@ -226,7 +249,7 @@ func UpdateLesson(db *sql.DB) gin.HandlerFunc {
 		}
 		defer tx.Rollback()
 
-		_, err = tx.Exec("UPDATE lessons SET title = ?, videoUrl = ?, duration = ? WHERE id = ?", lesson.Title, lesson.VideoURL, lesson.Duration, lessonId)
+		_, err = tx.Exec("UPDATE lessons SET title = ?, videoUrl = ?, duration = ?, position = ? WHERE id = ?", lesson.Title, lesson.VideoURL, lesson.Duration, lesson.Position, lessonId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.Error{
 				Error: "Failed to update lesson in database",

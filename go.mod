@@ -3,7 +3,6 @@ module online-learning-golang
 go 1.22.7
 
 require (
-	github.com/3d0c/gmf v0.0.0-20220906170454-be727bc5b56c
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cloudinary/cloudinary-go/v2 v2.9.0

@@ -1,7 +1,5 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/3d0c/gmf v0.0.0-20220906170454-be727bc5b56c h1:8i+Ctl/XBV/MINPveOAMGjJO2XiObXmYe/j4vAEL+3s=
-github.com/3d0c/gmf v0.0.0-20220906170454-be727bc5b56c/go.mod h1:PqcBsVCdnbbM6CMlSSPQMtmUyMfxF+Zjddh957qOzMw=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
 github.com/aws/aws-sdk-go v1.55.5 h1:KKUZBfBoyqy5d3swXyiC7Q76ic40rYcbqH7qjh59kzU=

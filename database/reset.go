@@ -207,6 +207,7 @@ func CreateLessonsTable(db *sql.DB) error {
         title VARCHAR(255) NOT NULL,
         videoUrl VARCHAR(255) NOT NULL,
         duration INT NOT NULL,
+        position INT NOT NULL,
         FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
     );`
 	_, err := db.Exec(query)
@@ -460,6 +461,59 @@ func InsertDocumentsData(db *sql.DB) error {
 	return nil
 }
 
+func InsertCoursesData(db *sql.DB) error {
+	cloudinaryStorage := os.Getenv("CLOUDINARY_STORAGE")
+
+	query := `INSERT INTO courses (subjectId, title, thumbnailUrl, description, price, instructor) VALUES (?, ?, ?, ?, ?, ?)`
+	_, err := db.Exec(query,
+		4,
+		"Giải đề thi THPT Quốc gia bằng máy tính Casio",
+		cloudinaryStorage+"image/upload/v1730551590/images/jxicfhtstqu1c0xcvsrr.jpg",
+		"Giải đề thi THPT Quốc gia bằng máy tính Casio là phương pháp giúp học sinh giải nhanh các bài toán trắc nghiệm Toán. Thông qua việc sử dụng các chức năng của máy tính Casio, học sinh có thể giải quyết các dạng bài từ cơ bản đến nâng cao một cách hiệu quả và tiết kiệm thời gian. Hướng dẫn này sẽ cung cấp các mẹo và ví dụ minh họa chi tiết để hỗ trợ việc ôn luyện.",
+		2000000,
+		"Nguyễn Thành Minh")
+
+	if err != nil {
+		return fmt.Errorf("failed to insert course: %w", err)
+	}
+
+	return nil
+}
+
+type CreateLesson struct {
+	CourseID int
+	Title    string
+	VideoURL string
+	Duration int
+	Position int
+}
+
+func InsertLessonsData(db *sql.DB) error {
+	cloudinaryStorage := os.Getenv("CLOUDINARY_STORAGE")
+
+	query := `INSERT INTO lessons (courseId, title, videoUrl, duration, position) VALUES (?, ?, ?, ?, ?)`
+
+	data := []CreateLesson{
+		{1, "[TOÁN 12] - Casio Tích phân tham số a, b (câu 1)", "video/upload/v1730552349/videos/ufpeid04iixmfukhqs0h.mp4", 225, 1},
+		{1, "[THPT QUỐC GIA] - Giải đề thi bằng máy tính casio TOÁN 12 (PHẦN 1)", "video/upload/v1730554148/videos/vgsw5axuokninr2ehqee.mp4", 313, 2},
+		{1, "[THPT Quốc gia] - Tích phân chứa tham số (Câu 1)", "video/upload/v1730554326/videos/bbu09gbprwgxfojxjvb1.mp4", 211, 3},
+		{1, "[THPT Quốc gia] - Tích phân chứa tham số (Câu 2)", "video/upload/v1730554424/videos/wbj1sw6qbtsxjvmghkkg.mp4", 240, 4},
+		{1, "[Ôn thi THPT] - Giải đề thi số 102 bằng máy tính casio - PHẦN 1", "video/upload/v1730554424/videos/wbj1sw6qbtsxjvmghkkg.mp4", 677, 5},
+		{1, "[Ôn thi THPT] - Giải đề thi số 102 bằng máy tính casio - PHẦN 2", "video/upload/v1730554653/videos/jiyhhyifhau3anm2buzj.mp4", 2882, 6},
+		{1, "[Thi THPT] Giải đề Minh họa bằng máy tính casio (Đề 110 - Phần 1)", "video/upload/v1730554982/videos/lf10zrhnqpckqs6cy6vk.mp4", 1384, 7},
+		{1, "[Thi THPT] Giải đề Minh họa bằng máy tính casio (Đề 110 - Phần 2)", "video/upload/v1730555002/videos/t7d14a7yrhajgjkqd8mx.mp4", 1937, 8},
+	}
+
+	for _, row := range data {
+		_, err := db.Exec(query, row.CourseID, row.Title, cloudinaryStorage+row.VideoURL, row.Duration, row.Position)
+		if err != nil {
+			return fmt.Errorf("failed to insert class %s: %w", row.Title, err)
+		}
+	}
+
+	return nil
+}
+
 func ResetDataBase(db *sql.DB) error {
 
 	if err := DropPurchasesTable(db); err != nil {
@@ -530,6 +584,12 @@ func ResetDataBase(db *sql.DB) error {
 		return err
 	}
 	if err := InsertDocumentsData(db); err != nil {
+		return err
+	}
+	if err := InsertCoursesData(db); err != nil {
+		return err
+	}
+	if err := InsertLessonsData(db); err != nil {
 		return err
 	}
 

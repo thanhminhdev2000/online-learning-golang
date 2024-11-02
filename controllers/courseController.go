@@ -28,7 +28,7 @@ import (
 // @Success      200         {object}  models.Course
 // @Failure      400         {object}  models.Error
 // @Failure      500         {object}  models.Error
-// @Router       /courses [post]
+// @Router       /courses/ [post]
 func CreateCourse(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var course models.Course
@@ -450,7 +450,7 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 
 		var lessons []models.Lesson
 
-		lessonsQuery := `SELECT id, courseId, title, videoUrl FROM lessons WHERE courseId = ?`
+		lessonsQuery := `SELECT id, courseId, title, videoUrl, duration, position FROM lessons WHERE courseId = ? ORDER BY position ASC`
 		rows, err := db.Query(lessonsQuery, id)
 		if err != nil {
 			log.Printf("Error retrieving lessons for course %d: %v", id, err)
@@ -463,7 +463,7 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var lesson models.Lesson
-			if err := rows.Scan(&lesson.ID, &lesson.CourseID, &lesson.Title, &lesson.VideoURL); err != nil {
+			if err := rows.Scan(&lesson.ID, &lesson.CourseID, &lesson.Title, &lesson.VideoURL, &lesson.Duration, &lesson.Position); err != nil {
 				log.Printf("Error scanning lesson: %v", err)
 				c.JSON(http.StatusInternalServerError, models.Error{
 					Error: "Failed to process lesson data",
