@@ -9,6 +9,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 
 	"online-learning-golang/database"
 	_ "online-learning-golang/docs"
@@ -34,10 +35,10 @@ import (
 // @name Authorization
 
 func main() {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatalf("Error loading .env file")
-	// }
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
 
 	reset := flag.Bool("reset", false, "Reset the database")
 	flag.Parse()
