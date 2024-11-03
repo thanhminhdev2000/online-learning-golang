@@ -56,6 +56,8 @@ definitions:
         type: integer
       instructor:
         type: string
+      isActive:
+        type: boolean
       lessons:
         items:
           $ref: '#/definitions/models.Lesson'
@@ -74,6 +76,7 @@ definitions:
     - description
     - id
     - instructor
+    - isActive
     - lessons
     - price
     - subjectId
@@ -306,6 +309,7 @@ definitions:
       username:
         type: string
     required:
+    - avatar
     - dateOfBirth
     - email
     - fullName
@@ -738,6 +742,44 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: Update an existing course
+      tags:
+      - Course
+  /courses/activate:
+    post:
+      consumes:
+      - application/json
+      description: Admin activates a course for a specific user using email
+      parameters:
+      - description: User Email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: Course ID
+        in: formData
+        name: courseId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Activate a course for a user
       tags:
       - Course
   /documents/:

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	awsUtils "online-learning-golang/aws"
 	"online-learning-golang/models"
+	"online-learning-golang/utils"
 	"strconv"
 	"strings"
 
@@ -109,7 +109,7 @@ func CreateDocument(db *sql.DB) gin.HandlerFunc {
 		}
 		defer file.Close()
 
-		url, err := awsUtils.UploadPDF(file, fileHeader)
+		url, err := utils.UploadPDF(file, fileHeader)
 		if err != nil {
 			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to upload file"})
@@ -196,13 +196,13 @@ func UpdateDocument(db *sql.DB) gin.HandlerFunc {
 				return
 			}
 
-			err = awsUtils.DeletePDF(oldFileUrl)
+			err = utils.DeletePDF(oldFileUrl)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to delete old document file"})
 				return
 			}
 
-			newFileUrl, err := awsUtils.UploadPDF(file, fileHeader)
+			newFileUrl, err := utils.UploadPDF(file, fileHeader)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to upload new document file"})
 				return

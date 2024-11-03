@@ -77,11 +77,11 @@ func DropLessonsTable(db *sql.DB) error {
 	return nil
 }
 
-func DropPurchasesTable(db *sql.DB) error {
-	query := `DROP TABLE IF EXISTS purchases;`
+func DropUserCoursesTable(db *sql.DB) error {
+	query := `DROP TABLE IF EXISTS user_courses;`
 	_, err := db.Exec(query)
 	if err != nil {
-		return fmt.Errorf("failed to drop purchases table: %w", err)
+		return fmt.Errorf("failed to drop user_courses table: %w", err)
 	}
 	return nil
 }
@@ -217,19 +217,19 @@ func CreateLessonsTable(db *sql.DB) error {
 	return nil
 }
 
-func CreatePurchasesTable(db *sql.DB) error {
+func CreateUserCoursesTable(db *sql.DB) error {
 	query := `
-    CREATE TABLE IF NOT EXISTS purchases (
+    CREATE TABLE IF NOT EXISTS user_courses (
         id INT AUTO_INCREMENT PRIMARY KEY,
         userId INT NOT NULL,
         courseId INT NOT NULL,
-        purchaseDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
     );`
 	_, err := db.Exec(query)
 	if err != nil {
-		return fmt.Errorf("failed to create purchases table: %w", err)
+		return fmt.Errorf("failed to create user_courses table: %w", err)
 	}
 	return nil
 }
@@ -516,7 +516,7 @@ func InsertLessonsData(db *sql.DB) error {
 
 func ResetDataBase(db *sql.DB) error {
 
-	if err := DropPurchasesTable(db); err != nil {
+	if err := DropUserCoursesTable(db); err != nil {
 		return err
 	}
 	if err := DropLessonsTable(db); err != nil {
@@ -568,7 +568,7 @@ func ResetDataBase(db *sql.DB) error {
 	if err := CreateLessonsTable(db); err != nil {
 		return err
 	}
-	if err := CreatePurchasesTable(db); err != nil {
+	if err := CreateUserCoursesTable(db); err != nil {
 		return err
 	}
 

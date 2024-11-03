@@ -38,7 +38,7 @@ type UserDetail struct {
 	Username    string     `json:"username" validate:"required"`
 	FullName    string     `json:"fullName" validate:"required"`
 	Gender      UserGender `json:"gender" validate:"required"`
-	Avatar      string     `json:"avatar,omitempty"`
+	Avatar      string     `json:"avatar" validate:"required"`
 	DateOfBirth string     `json:"dateOfBirth" validate:"required,datetime=2006-01-02"`
 	Role        UserRole   `json:"role" validate:"required"`
 }

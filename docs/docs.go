@@ -431,6 +431,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/courses/activate": {
+            "post": {
+                "description": "Admin activates a course for a specific user using email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Course"
+                ],
+                "summary": "Activate a course for a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User Email",
+                        "name": "email",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Course ID",
+                        "name": "courseId",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Message"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/courses/{id}": {
             "get": {
                 "description": "Retrieve a single course using its ID",
@@ -1556,6 +1613,7 @@ const docTemplate = `{
                 "description",
                 "id",
                 "instructor",
+                "isActive",
                 "lessons",
                 "price",
                 "subjectId",
@@ -1577,6 +1635,9 @@ const docTemplate = `{
                 },
                 "instructor": {
                     "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
                 },
                 "lessons": {
                     "type": "array",
@@ -1901,6 +1962,7 @@ const docTemplate = `{
         "models.UserDetail": {
             "type": "object",
             "required": [
+                "avatar",
                 "dateOfBirth",
                 "email",
                 "fullName",

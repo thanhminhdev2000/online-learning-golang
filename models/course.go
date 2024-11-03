@@ -14,6 +14,7 @@ type Course struct {
 	Description  string   `json:"description" validate:"required"`
 	Price        float64  `json:"price" validate:"required"`
 	Instructor   string   `json:"instructor" validate:"required"`
+	IsActive     bool     `json:"isActive" validate:"required"`
 	Lessons      []Lesson `json:"lessons,omitempty" validate:"required"`
 }
 

@@ -448,6 +448,23 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		userID, _ := c.Get("userId")
+
+		var isActive bool
+		err = db.QueryRow("SELECT COUNT(*) > 0 FROM user_courses WHERE userId = ? AND courseId = ?", userID, id).Scan(&isActive)
+		if err != nil {
+			log.Printf("Error checking user course activation: %v", err)
+			c.JSON(http.StatusInternalServerError, models.Error{
+				Error: "Failed to check course activation status",
+			})
+			return
+		}
+
+		currentUserRole, _ := c.Get("role")
+		if currentUserRole == "admin" {
+			isActive = true
+		}
+
 		var lessons []models.Lesson
 
 		lessonsQuery := `SELECT id, courseId, title, videoUrl, duration, position FROM lessons WHERE courseId = ? ORDER BY position ASC`
@@ -470,6 +487,10 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 				})
 				return
 			}
+
+			if !isActive {
+				lesson.VideoURL = ""
+			}
 			lessons = append(lessons, lesson)
 		}
 
@@ -481,6 +502,7 @@ func GetCourse(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		course.IsActive = isActive
 		course.Lessons = lessons
 
 		c.JSON(http.StatusOK, course)
@@ -632,5 +654,51 @@ func GetCourses(db *sql.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, response)
+	}
+}
+
+// ActivateCourseForUser handles activating a course for a user by admin
+// @Summary      Activate a course for a user
+// @Description  Admin activates a course for a specific user using email
+// @Tags         Course
+// @Accept       json
+// @Produce      json
+// @Param        email      formData      string  true   "User Email"
+// @Param        courseId   formData      int     true   "Course ID"
+// @Success      200        {object}  models.Message
+// @Failure      400        {object}  models.Error
+// @Failure      404        {object}  models.Error
+// @Failure      500        {object}  models.Error
+// @Router       /courses/activate [post]
+func ActivateCourseForUser(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var activationRequest struct {
+			Email    string `json:"email" binding:"required"`
+			CourseID int    `json:"courseId" binding:"required"`
+		}
+
+		if err := c.ShouldBindJSON(&activationRequest); err != nil {
+			c.JSON(http.StatusBadRequest, models.Error{Error: "Invalid request body"})
+			return
+		}
+
+		var userID int
+		err := db.QueryRow("SELECT id FROM users WHERE email = ?", activationRequest.Email).Scan(&userID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, models.Error{Error: "User with the given email not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to check user existence"})
+			return
+		}
+
+		_, err = db.Exec("INSERT INTO user_courses (userId, courseId) VALUES (?, ?)", userID, activationRequest.CourseID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to activate course for user"})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.Message{Message: "Course activated successfully for user"})
 	}
 }
