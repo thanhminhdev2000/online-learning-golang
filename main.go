@@ -35,10 +35,10 @@ import (
 // @name Authorization
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
+	godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file")
+	// }
 
 	reset := flag.Bool("reset", false, "Reset the database")
 	flag.Parse()
