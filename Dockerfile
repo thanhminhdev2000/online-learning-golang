@@ -1,8 +1,5 @@
-# Use the specified Golang runtime as a parent image
-FROM golang:1.22.7-alpine
-
-# Install necessary packages for building the application
-RUN apk add --no-cache gcc musl-dev
+# Use an official Golang runtime as a parent image
+FROM golang:1.23.2-alpine
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
