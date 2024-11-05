@@ -40,3 +40,10 @@ services:
     depends_on:
       - mysql
     restart: always
+
+volumes:
+  mysql_data:
+
+networks:
+  go-network:
+    driver: bridge
