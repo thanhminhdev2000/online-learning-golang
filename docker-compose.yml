@@ -13,6 +13,7 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - go-network
+    restart: always
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -24,26 +25,18 @@ services:
       - "8081:80"
     networks:
       - go-network
+    restart: always
 
   golang-server:
     build:
       context: .
       dockerfile: Dockerfile
     env_file:
-    - .env
+      - .env
     ports:
       - "8080:8080"
     networks:
       - go-network
     depends_on:
       - mysql
-
-volumes:
-  mysql_data:
-
-networks:
-  go-network:
-    driver: bridge
-
-# docker-compose down
-# docker-compose up -d
+    restart: always
