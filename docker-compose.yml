@@ -50,3 +50,10 @@ services:
       - golang-server
     networks:
       - go-network
+
+volumes:
+  mysql_data:
+
+networks:
+  go-network:
+    driver: bridge
