@@ -76,9 +76,17 @@ The **Online Learning Platform** project is built using **Golang**, aimed at pro
 
 ## Usage
 
-- **User Registration**: Create an account to access the courses.
-- **Create a New Course**: Instructors can create courses with information such as title, description, and attached materials.
-- **Add Lectures**: Instructors can add lectures and upload materials to Cloudinary.
+For testing purposes, you can use the following accounts:
+
+**Admin Account**:
+
+- Username: admin1
+- Password: zzzxxx
+
+**User Account**:
+
+- Username: user11
+- Password: zzzxxx
 
 ## Folder Structure
 
