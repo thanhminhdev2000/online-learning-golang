@@ -48,6 +48,10 @@ func main() {
 	}
 	defer db.Close()
 
+	if err := database.CreateAllTablesIfNotExist(db); err != nil {
+		log.Fatalf("Error creating tables: %v", err)
+	}
+
 	if *reset {
 		if err := database.ResetDataBase(db); err != nil {
 			log.Fatalf("Error resetting database: %v", err)

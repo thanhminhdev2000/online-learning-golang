@@ -272,6 +272,10 @@ func InsertTestAccounts(db *sql.DB) error {
 	return nil
 }
 
+func NoInsert(db *sql.DB) error {
+	return nil
+}
+
 func InsertClassesData(db *sql.DB) error {
 	classes := []string{
 		"Đề thi thử đại học", "Lớp 12", "Lớp 11", "Lớp 10",
@@ -514,6 +518,42 @@ func InsertLessonsData(db *sql.DB) error {
 	return nil
 }
 
+func CreateAllTablesIfNotExist(db *sql.DB) error {
+	tables := []struct {
+		name   string
+		create func(*sql.DB) error
+		insert func(*sql.DB) error
+	}{
+		{"users", CreateUsersTable, InsertTestAccounts},
+		{"reset_pw_tokens", CreateResetPasswordTokensTable, NoInsert},
+		{"classes", CreateClassesTable, InsertClassesData},
+		{"subjects", CreateSubjectsTable, InsertSubjectsData},
+		{"documents", CreateDocumentsTable, InsertDocumentsData},
+		{"courses", CreateCoursesTable, InsertCoursesData},
+		{"lessons", CreateLessonsTable, InsertLessonsData},
+		{"user_courses", CreateUserCoursesTable, NoInsert},
+	}
+
+	for _, table := range tables {
+		var exists bool
+		query := fmt.Sprintf("SHOW TABLES LIKE '%s'", table.name)
+		err := db.QueryRow(query).Scan(&exists)
+		if err != nil {
+			return fmt.Errorf("failed to check if table %s exists: %w", table.name, err)
+		}
+		if !exists {
+			if err := table.create(db); err != nil {
+				return fmt.Errorf("failed to create table %s: %w", table.name, err)
+			}
+			if err := table.insert(db); err != nil {
+				return fmt.Errorf("failed to insert table %s: %w", table.name, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 func ResetDataBase(db *sql.DB) error {
 
 	if err := DropUserCoursesTable(db); err != nil {
@@ -545,30 +585,7 @@ func ResetDataBase(db *sql.DB) error {
 
 	// ----------------
 
-	if err := CreateUsersTable(db); err != nil {
-		return err
-	}
-	if err := CreateResetPasswordTokensTable(db); err != nil {
-		return err
-	}
-
-	if err := CreateClassesTable(db); err != nil {
-		return err
-	}
-	if err := CreateSubjectsTable(db); err != nil {
-		return err
-	}
-	if err := CreateDocumentsTable(db); err != nil {
-		return err
-	}
-
-	if err := CreateCoursesTable(db); err != nil {
-		return err
-	}
-	if err := CreateLessonsTable(db); err != nil {
-		return err
-	}
-	if err := CreateUserCoursesTable(db); err != nil {
+	if err := CreateAllTablesIfNotExist(db); err != nil {
 		return err
 	}
 
