@@ -13,6 +13,11 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - go-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -29,6 +34,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: golang-server
     env_file:
     - .env
     ports:
