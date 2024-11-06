@@ -44,6 +44,9 @@ func UploadImage(cld *cloudinary.Cloudinary, file multipart.File) (string, error
 }
 
 func DeleteImage(cld *cloudinary.Cloudinary, imageURL string) error {
+	// prevent delete test data
+	return nil
+
 	if imageURL == "" {
 		return nil
 	}
@@ -111,6 +114,9 @@ func UploadVideo(cld *cloudinary.Cloudinary, file multipart.File) (string, int, 
 }
 
 func DeleteVideo(cld *cloudinary.Cloudinary, videoURL string) error {
+	// prevent delete test data
+	return nil
+
 	if videoURL == "" {
 		return nil
 	}

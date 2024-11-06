@@ -49,6 +49,8 @@ func UploadPDF(file multipart.File, fileHeader *multipart.FileHeader) (string, e
 }
 
 func DeletePDF(s3Key string) error {
+	// prevent delete test data
+	return nil
 	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
 
 	sess, err := session.NewSession(&aws.Config{
