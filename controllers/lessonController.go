@@ -168,20 +168,26 @@ func UpdateLesson(db *sql.DB) gin.HandlerFunc {
 		}
 
 		var existingLesson models.Lesson
-		query := `SELECT videoUrl FROM lessons WHERE id = ?`
-		err = db.QueryRow(query, lessonId).Scan(&existingLesson.VideoURL)
+		query := `SELECT id, courseId, title, videoUrl, duration, position FROM lessons WHERE id = ?`
+		err = db.QueryRow(query, lessonId).Scan(
+			&existingLesson.ID,
+			&existingLesson.CourseID,
+			&existingLesson.Title,
+			&existingLesson.VideoURL,
+			&existingLesson.Duration,
+			&existingLesson.Position,
+		)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				c.JSON(http.StatusNotFound, models.Error{Error: "Course not found"})
-				return
-			} else {
-				fmt.Println(err)
-				c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to retrieve course"})
+				c.JSON(http.StatusNotFound, models.Error{Error: "Lesson not found"})
 				return
 			}
+			c.JSON(http.StatusInternalServerError, models.Error{Error: "Failed to retrieve lesson"})
+			return
 		}
 
-		var lesson models.Lesson
+		lesson := existingLesson
+
 		if title := c.PostForm("title"); title != "" {
 			lesson.Title = title
 		}
