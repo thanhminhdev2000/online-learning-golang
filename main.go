@@ -28,7 +28,7 @@ import (
 // @contact.url http://www.swagger.io/support
 // @contact.email support@swagger.io
 
-// @host localhost:8080
+// @host 52.90.82.84
 // @BasePath /api/v1
 // @securityDefinitions.apikey BearerAuth
 // @in header
@@ -64,7 +64,7 @@ func main() {
 	router.RedirectTrailingSlash = false
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://178.128.55.56"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:8080", os.Getenv("CLIENT_URL")},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

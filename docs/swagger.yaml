@@ -348,7 +348,7 @@ definitions:
     x-enum-varnames:
     - RoleUser
     - RoleAdmin
-host: localhost:8080
+host: 52.90.82.84
 info:
   contact:
     email: support@swagger.io
