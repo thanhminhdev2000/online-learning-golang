@@ -535,16 +535,17 @@ func CreateAllTablesIfNotExist(db *sql.DB) error {
 	}
 
 	for _, table := range tables {
-		var exists bool
+		if err := table.create(db); err != nil {
+			return fmt.Errorf("failed to create table %s: %w", table.name, err)
+		}
+
+		var exists string
 		query := fmt.Sprintf("SHOW TABLES LIKE '%s'", table.name)
 		err := db.QueryRow(query).Scan(&exists)
-		if err != nil {
+		if err != nil && err != sql.ErrNoRows {
 			return fmt.Errorf("failed to check if table %s exists: %w", table.name, err)
 		}
-		if !exists {
-			if err := table.create(db); err != nil {
-				return fmt.Errorf("failed to create table %s: %w", table.name, err)
-			}
+		if exists == table.name {
 			if err := table.insert(db); err != nil {
 				return fmt.Errorf("failed to insert table %s: %w", table.name, err)
 			}
