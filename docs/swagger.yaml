@@ -1,5 +1,18 @@
 basePath: /api/v1
 definitions:
+  chat.Message:
+    properties:
+      content:
+        type: string
+      id:
+        type: integer
+      senderId:
+        type: integer
+      timestamp:
+        type: string
+      type:
+        type: string
+    type: object
   models.AccessTokenResponse:
     properties:
       accessToken:
@@ -945,6 +958,38 @@ paths:
       summary: List of classes with their subjects and document counts
       tags:
       - Document
+  /history:
+    get:
+      consumes:
+      - application/json
+      description: Lấy lịch sử chat với phân trang
+      parameters:
+      - default: 50
+        description: Số lượng tin nhắn mỗi trang
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Vị trí bắt đầu
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/chat.Message'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get Chat History
+      tags:
+      - chat
   /lessons/:
     post:
       consumes:
@@ -1356,6 +1401,31 @@ paths:
       summary: Register a new user
       tags:
       - User
+  /ws:
+    get:
+      consumes:
+      - application/json
+      description: Thiết lập kết nối WebSocket cho chat realtime
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols to WebSocket
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - Bearer: []
+      summary: WebSocket Chat Connection
+      tags:
+      - chat
 securityDefinitions:
   BearerAuth:
     in: header

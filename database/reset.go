@@ -86,6 +86,15 @@ func DropUserCoursesTable(db *sql.DB) error {
 	return nil
 }
 
+func DropChatMessagesTable(db *sql.DB) error {
+	query := `DROP TABLE IF EXISTS chat_messages;`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to drop chat_messages table: %w", err)
+	}
+	return nil
+}
+
 func CreateUsersTable(db *sql.DB) error {
 	query := `
     CREATE TABLE IF NOT EXISTS users (
@@ -218,6 +227,23 @@ func CreateLessonsTable(db *sql.DB) error {
 }
 
 func CreateUserCoursesTable(db *sql.DB) error {
+	query := `
+    CREATE TABLE IF NOT EXISTS user_courses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId INT NOT NULL,
+        courseId INT NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
+    );`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to create user_courses table: %w", err)
+	}
+	return nil
+}
+
+func CreateChatMessagesTable(db *sql.DB) error {
 	query := `
     CREATE TABLE IF NOT EXISTS user_courses (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -532,6 +558,7 @@ func CreateAllTablesIfNotExist(db *sql.DB) error {
 		{"courses", CreateCoursesTable, InsertCoursesData},
 		{"lessons", CreateLessonsTable, InsertLessonsData},
 		{"user_courses", CreateUserCoursesTable, NoInsert},
+		{"chat_messages", CreateChatMessagesTable, NoInsert},
 	}
 
 	for _, table := range tables {
